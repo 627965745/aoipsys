@@ -1,20 +1,14 @@
 import { Button, Form, Input, message } from "antd";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useLocation } from "react-router-dom";
-import { validateEmail, register } from "../api/api";
+import { useNavigate } from "react-router-dom";
+import { register } from "../api/api";
 
 const Register = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const location = useLocation();
-    const isForgetPassword = location.pathname.includes('forget');
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [sendingCode, setSendingCode] = useState(false);
-    const [countdown, setCountdown] = useState(0);
-    const [showPasswordFields, setShowPasswordFields] = useState(false);
     const [captchaUrl, setCaptchaUrl] = useState("");
 
     useEffect(() => {
@@ -31,69 +25,35 @@ const Register = () => {
         }
     };
 
-    const startCountdown = () => {
-        setCountdown(60);
-        const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-    };
-
-    const handleGetCode = async () => {
-        try {
-            const email = form.getFieldValue("email");
-            const captcha = form.getFieldValue("captcha");
-
-            if (!email || !captcha) {
-                message.error(t("enterEmailAndCaptcha"));
-                return;
-            }
-
-            setSendingCode(true);
-            const response = await validateEmail({ email, captcha });
-
-            if (response.data.status === 0) {
-                message.success(t("emailValidationSent"));
-                setShowPasswordFields(true);
-                startCountdown();
-            } else {
-                message.error(
-                    response.data.message || t("emailValidationFailed")
-                );
-                fetchCaptcha();
-            }
-        } catch (error) {
-            message.error(
-                error.response?.data?.message || t("emailValidationFailed")
-            );
-            fetchCaptcha();
-        } finally {
-            setSendingCode(false);
-        }
-    };
-
     const onFinish = async (values) => {
         try {
             setLoading(true);
             const registerData = {
                 email: values.email,
                 password: values.password,
-                code: values.code,
+                captcha: values.captcha,
+                name: values.name || "",
+                company: values.company || "",
+                position: values.position || "",
+                industry: values.industry || "",
+                contact: values.contact || ""
             };
 
-            await register(registerData);
-            message.success(isForgetPassword ? t("passwordResetSuccess") : t("registerSuccess"));
-            navigate("/login");
+            const response = await register(registerData);
+            
+            if (response.data && response.data.status === 0) {
+                message.success(t("registerSuccess"));
+                navigate("/login");
+            } else {
+                message.error(t("registerFailed"));
+                fetchCaptcha();
+            }
         } catch (error) {
+            console.error("Registration error:", error);
             message.error(
-                error.response?.data?.message || 
-                (isForgetPassword ? t("passwordResetFailed") : t("registerFailed"))
+                error.response?.data?.message || t("registerFailed")
             );
+            fetchCaptcha();
         } finally {
             setLoading(false);
         }
@@ -104,7 +64,7 @@ const Register = () => {
             <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg relative">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        {isForgetPassword ? t("forgetPassword") : t("register")}
+                        {t("register")}
                     </h2>
                 </div>
                 <Form
@@ -124,6 +84,105 @@ const Register = () => {
                         ]}
                     >
                         <Input placeholder={t("emailPlaceholder")} />
+                    </Form.Item>
+
+                    <div className="flex gap-4">
+                        <Form.Item
+                            name="password"
+                            label={t("password")}
+                            className="flex-1"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("passwordError"),
+                                },
+                                {
+                                    min: 8,
+                                    max: 32,
+                                    message: t("passwordLengthError"),
+                                },
+                            ]}
+                        >
+                            <Input.Password
+                                placeholder={t("passwordPlaceholder")}
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="confirmPassword"
+                            label={t("confirmPassword")}
+                            className="flex-1"
+                            dependencies={["password"]}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("confirmPasswordError"),
+                                },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (
+                                            !value ||
+                                            getFieldValue("password") ===
+                                                value
+                                        ) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(
+                                            new Error(
+                                                t("passwordsNotMatch")
+                                            )
+                                        );
+                                    },
+                                }),
+                            ]}
+                        >
+                            <Input.Password
+                                placeholder={t("confirmPasswordPlaceholder")}
+                            />
+                        </Form.Item>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <Form.Item
+                            name="name"
+                            label={t("name")}
+                            className="flex-1"
+                        >
+                            <Input placeholder={t("namePlaceholder")} />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="industry"
+                            label={t("industry")}
+                            className="flex-1"
+                        >
+                            <Input placeholder={t("industryPlaceholder")} />
+                        </Form.Item>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <Form.Item
+                            name="company"
+                            label={t("company")}
+                            className="flex-1"
+                        >
+                            <Input placeholder={t("companyPlaceholder")} />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="position"
+                            label={t("position")}
+                            className="flex-1"
+                        >
+                            <Input placeholder={t("positionPlaceholder")} />
+                        </Form.Item>
+                    </div>
+
+                    <Form.Item
+                        name="contact"
+                        label={t("contact")}
+                    >
+                        <Input placeholder={t("contactPlaceholder")} />
                     </Form.Item>
 
                     <Form.Item
@@ -150,102 +209,16 @@ const Register = () => {
                         </div>
                     )}
 
-                    {!showPasswordFields && (
-                        <Form.Item>
-                            <Button
-                                type="primary"
-                                onClick={handleGetCode}
-                                loading={sendingCode}
-                                block
-                            >
-                                {t("getEmailVerification")}
-                            </Button>
-                        </Form.Item>
-                    )}
-
-                    {showPasswordFields && (
-                        <>
-                            <Form.Item
-                                name="password"
-                                label={t("password")}
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: t("passwordError"),
-                                    },
-                                    {
-                                        min: 8,
-                                        max: 32,
-                                        message: t("passwordLengthError"),
-                                    },
-                                ]}
-                            >
-                                <Input.Password
-                                    placeholder={t("passwordPlaceholder")}
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                name="confirmPassword"
-                                label={t("confirmPassword")}
-                                dependencies={["password"]}
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: t("confirmPasswordError"),
-                                    },
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            if (
-                                                !value ||
-                                                getFieldValue("password") ===
-                                                    value
-                                            ) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject(
-                                                new Error(
-                                                    t("passwordsNotMatch")
-                                                )
-                                            );
-                                        },
-                                    }),
-                                ]}
-                            >
-                                <Input.Password
-                                    placeholder={t("passwordPlaceholder")}
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                name="code"
-                                label={t("verificationCode")}
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: t("verificationCodeError"),
-                                    },
-                                ]}
-                            >
-                                <Input
-                                    placeholder={t(
-                                        "verificationCodePlaceholder"
-                                    )}
-                                />
-                            </Form.Item>
-
-                            <Form.Item>
-                                <Button
-                                    type="primary"
-                                    htmlType="submit"
-                                    loading={loading}
-                                    block
-                                >
-                                    {isForgetPassword ? t("resetPassword") : t("register")}
-                                </Button>
-                            </Form.Item>
-                        </>
-                    )}
+                    <Form.Item>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={loading}
+                            block
+                        >
+                            {t("register")}
+                        </Button>
+                    </Form.Item>
                 </Form>
             </div>
         </div>

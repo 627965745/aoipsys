@@ -4,7 +4,7 @@ import { checkUser } from '../api/api';
 import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-const publicPaths = ['/login', '/admin/login', '/register', '/forget'];
+const publicPaths = ['/login', '/admin/login', '/register', '/language'];
 
 const AuthCheck = ({ children }) => {
     const { t } = useTranslation();

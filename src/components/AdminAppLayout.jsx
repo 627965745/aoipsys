@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button, Layout as AntLayout, Menu, theme, Space, message, Select } from 'antd';
 import { useTranslation } from "react-i18next";
-import { logout } from "../api/api";
+import { logout, getLanguageList } from "../api/api";
 import { Dropdown } from 'antd';
 import { UserOutlined, LockOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,7 @@ const AdminAppLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, checkAuthStatus } = useAuth();
+    const [languages, setLanguages] = useState([]);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
@@ -27,6 +28,28 @@ const AdminAppLayout = () => {
         const currentKey = pathParts[2] || '';
         setSelectedKey(currentKey);
     }, [location.pathname]);
+
+    useEffect(() => {
+        fetchLanguages();
+    }, []);
+
+    const fetchLanguages = async () => {
+        try {
+            const response = await getLanguageList({ query: "", page: 1, rows: 100 });
+            if (response.data.status === 0) {
+                setLanguages(response.data.data.rows);
+                // If no language is set, set the first enabled language as default
+                if (!i18n.language && response.data.data.rows.length > 0) {
+                    const defaultLang = response.data.data.rows.find(lang => lang.enabled);
+                    if (defaultLang) {
+                        handleLanguageChange(defaultLang.id);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching languages:", error);
+        }
+    };
 
     const handleLanguageChange = (value) => {
         i18n.changeLanguage(value);
@@ -116,6 +139,10 @@ const AdminAppLayout = () => {
                             key: "user",
                             label: t("userManagement")
                         },
+                        {
+                            key: "language",
+                            label: t("languageManagement")
+                        },
                     ]}
                 />
             </div>
@@ -141,12 +168,15 @@ const AdminAppLayout = () => {
                 />
                 <Space>
                     <Select
-                        defaultValue={i18n.language}
+                        value={i18n.language}
                         onChange={handleLanguageChange}
                         className="w-[120px]"
                     >
-                        <Select.Option value="en">English</Select.Option>
-                        <Select.Option value="zh">中文</Select.Option>
+                        {languages.filter(lang => lang.enabled).map(lang => (
+                            <Select.Option key={lang.id} value={lang.id}>
+                                {lang.name}
+                            </Select.Option>
+                        ))}
                     </Select>
                     {user ? (
                         <Dropdown menu={userMenu} placement="bottomRight">

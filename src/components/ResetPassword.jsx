@@ -12,7 +12,7 @@ const ResetPassword = () => {
     const location = useLocation();
     const [form] = Form.useForm();
     const [captchaUrl, setCaptchaUrl] = useState(
-        "https://rentwx.highmec.com/obj/Common/Captcha/get"
+        `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`
     );
     const [loading, setLoading] = useState(false);
     const { checkAuthStatus } = useAuth();
@@ -27,7 +27,7 @@ const ResetPassword = () => {
 
     const refreshCaptcha = () => {
         try {
-            const url = "https://rentwx.highmec.com/obj/Common/Captcha/get";
+            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
             const uniqueUrl = `${url}?t=${new Date().getTime()}`;
             setCaptchaUrl(uniqueUrl);
         } catch (error) {
@@ -59,7 +59,7 @@ const ResetPassword = () => {
                     navigate(source === "admin" ? "/admin/login" : "/login", { replace: true });
                 }
             } else {
-                message.error(t("passwordResetError"));
+                message.error(response.data?.message || t("passwordResetError"));
                 refreshCaptcha();
                 form.setFieldsValue({ captcha: "" });
                 form.resetFields(["captcha"]);
@@ -74,7 +74,7 @@ const ResetPassword = () => {
             }
         } catch (error) {
             console.error("Reset password error:", error);
-            message.error(t("passwordResetError"));
+            message.error(error.response?.data?.message || t("passwordResetError"));
             refreshCaptcha();
             form.setFieldsValue({ captcha: "" });
             form.resetFields(["captcha"]);
@@ -113,8 +113,8 @@ const ResetPassword = () => {
                         onChange={handleLanguageChange}
                         style={{ width: 120 }}
                     >
-                        <Select.Option value="en">English</Select.Option>
-                        <Select.Option value="zh">中文</Select.Option>
+                        <Select.Option value="en_GB">English</Select.Option>
+                        <Select.Option value="zh_CN">中文</Select.Option>
                     </Select>
                 </div>
 

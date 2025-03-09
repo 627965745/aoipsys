@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Input, Radio, Space, Select, Upload, message, Button, Modal, Form } from "antd";
+import React, { useState, useEffect, useRef } from 'react';
+import { Input, Radio, Space, Select, Upload, message, Button, Modal, Form, Tabs } from "antd";
 import MdEditor from '../../components/MdEditor';
 import { InboxOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import { uploadFile } from '../../api/api';
@@ -11,13 +11,110 @@ const AddEditResource = ({
     onChange, 
     products, 
     typeOptions,
+    languages,
     t
 }) => {
     const [isManualUrlModalVisible, setIsManualUrlModalVisible] = useState(false);
-    const [manualUrl, setManualUrl] = useState('https://');
+    const [manualUrl, setManualUrl] = useState('');
+    const [activeTab, setActiveTab] = useState(null);
+    const [markdownTab, setMarkdownTab] = useState(null);
+    const [errors, setErrors] = useState({});
+    
+    // Create refs for input fields
+    const inputRefs = useRef({});
+
+    const validateInputs = () => {
+        const newErrors = {};
+        
+        // Check display name
+        if (!resource?.name || resource.name.trim() === '') {
+            newErrors.name = t("resourceNameRequired");
+        }
+
+        // Check product
+        if (!resource?.product) {
+            newErrors.product = t("productRequired");
+        }
+
+        // Check all enabled language inputs
+        const emptyLanguages = languages
+            .filter(lang => !resource?.names?.[lang.id] || 
+                           !resource.names[lang.id].trim());
+
+        if (emptyLanguages?.length > 0) {
+            newErrors.languages = emptyLanguages.map(lang => lang.id);
+            // Set active tab to first empty language
+            setActiveTab(emptyLanguages[0].id);
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Make validate method available to parent
+    useEffect(() => {
+        if (typeof onChange === 'function') {
+            onChange.validate = validateInputs;
+        }
+    }, [resource, languages]);
+
+    // Initialize tabs when component mounts or languages change
+    useEffect(() => {
+        if (languages?.length > 0) {
+            // Filter enabled languages first
+            const enabledLanguages = languages
+            
+            if (enabledLanguages.length > 0) {
+                if (!activeTab) setActiveTab(enabledLanguages[0].id);
+                if (!markdownTab) setMarkdownTab(enabledLanguages[0].id);
+            }
+        }
+    }, [languages]);
+
+    // Focus input when tab changes
+    useEffect(() => {
+        if (activeTab && inputRefs.current[activeTab]) {
+            // Use setTimeout to ensure the tab has fully rendered
+            setTimeout(() => {
+                inputRefs.current[activeTab]?.focus();
+            }, 100);
+        }
+    }, [activeTab]);
 
     const handleChange = (field, value) => {
         onChange({ ...resource, [field]: value });
+    };
+
+    const handleLanguageNameChange = (langId, value) => {
+        const newNames = { ...(resource.names || {}) };
+        
+        if (value.trim() === '') {
+            delete newNames[langId];
+        } else {
+            newNames[langId] = value.trim();
+        }
+        
+        // Clear error for this language when user types
+        if (errors.languages) {
+            setErrors(prev => ({
+                ...prev,
+                languages: prev.languages.filter(id => id !== langId)
+            }));
+        }
+        
+        onChange({ ...resource, names: newNames });
+    };
+
+    const handleLanguageMarkdownChange = (langId, value) => {
+        const newMarkdowns = { ...(resource.markdowns || {}) };
+        
+        if (!value.trim()) {
+            delete newMarkdowns[langId];
+        } else {
+            newMarkdowns[langId] = value.trim();
+        }
+        
+        onChange({ ...resource, markdowns: newMarkdowns });
     };
 
     const handleUpload = async (file) => {
@@ -28,8 +125,14 @@ const AddEditResource = ({
             const response = await uploadFile(formData);
             if (response.data.status === 0) {
                 const filename = response.data.data;
-                const fullUrl = `https://rentwx.highmec.com/uploads/${filename}`;
-                handleChange('url', fullUrl);
+                // Store just the relative path in the form data
+                const relativePath = `/uploads/${filename}`;
+                handleChange('url', relativePath);
+                
+                // For display purposes, show the full URL
+                const fullUrl = `${window.location.origin}${relativePath}`;
+                message.success(`${t('uploadSuccess')}: ${fullUrl}`);
+                
                 return false;
             } else {
                 message.error(t('uploadError'));
@@ -57,7 +160,7 @@ const AddEditResource = ({
         handleChange('url', '');
     };
 
-    const urlRegex = /^https?:\/\/([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
+    const urlRegex = /^https?:\/\/([\w-]+\.)+[\w-]+(:\d+)?(\/[\w-./?%&=+#]*)?$/;
 
     const isValidUrl = (urlString) => {
         return urlRegex.test(urlString);
@@ -71,12 +174,12 @@ const AddEditResource = ({
                 okText: t('confirm'),
                 cancelText: t('cancel'),
                 onOk: () => {
-                    setManualUrl('https://');
+                    setManualUrl('');
                     setIsManualUrlModalVisible(true);
                 }
             });
         } else {
-            setManualUrl('https://');
+            setManualUrl('');
             setIsManualUrlModalVisible(true);
         }
     };
@@ -102,27 +205,42 @@ const AddEditResource = ({
 
         handleChange('url', manualUrl.trim());
         setIsManualUrlModalVisible(false);
-        setManualUrl('https://');
+        setManualUrl('');
     };
 
     return (
         <Space direction="vertical" style={{ width: '100%' }}>
             <div style={{ display: 'flex', gap: '16px' }}>
                 <div style={{ flex: 1 }}>
-                    <div className="mb-2">{t('resourceName')}</div>
+                    <div className="mb-2">{t('displayName')}</div>
                     <Input
                         placeholder={t('enterResourceName')}
                         value={resource?.name}
-                        onChange={(e) => handleChange('name', e.target.value)}
+                        onChange={(e) => {
+                            handleChange('name', e.target.value);
+                            if (errors.name) {
+                                setErrors(prev => ({ ...prev, name: null }));
+                            }
+                        }}
+                        status={errors.name ? "error" : ""}
                     />
+                    {errors.name && (
+                        <div className="text-red-500 text-sm mt-1">{errors.name}</div>
+                    )}
                 </div>
                 <div style={{ flex: 1 }}>
                     <div className="mb-2">{t('productName')}</div>
                     <Select
                         placeholder={t('selectProduct')}
                         value={resource?.product}
-                        onChange={(value) => handleChange('product', value)}
+                        onChange={(value) => {
+                            handleChange('product', value);
+                            if (errors.product) {
+                                setErrors(prev => ({ ...prev, product: null }));
+                            }
+                        }}
                         style={{ width: '100%' }}
+                        status={errors.product ? "error" : ""}
                     >
                         {products.map(product => (
                             <Select.Option key={product.id} value={product.id}>
@@ -130,7 +248,55 @@ const AddEditResource = ({
                             </Select.Option>
                         ))}
                     </Select>
+                    {errors.product && (
+                        <div className="text-red-500 text-sm mt-1">{errors.product}</div>
+                    )}
                 </div>
+            </div>
+
+            <div>
+                <div className="mb-2">{t('resourceNames')}</div>
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={setActiveTab}
+                    items={languages
+                        .map(language => {
+                            const hasError = errors.languages?.includes(language.id);
+                            return {
+                                key: language.id,
+                                label: language.name,
+                                children: (
+                                    <div>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <Input
+                                                placeholder={t('enterResourceName')}
+                                                value={resource.names?.[language.id] || ''}
+                                                onChange={(e) => handleLanguageNameChange(language.id, e.target.value)}
+                                                ref={el => inputRefs.current[language.id] = el}
+                                                status={hasError ? "error" : ""}
+                                            />
+                                            <Button 
+                                                type="primary"
+                                                onClick={() => {
+                                                    if (resource?.name) {
+                                                        handleLanguageNameChange(language.id, resource.name);
+                                                    }
+                                                }}
+                                            >
+                                                {t('applyName')}
+                                            </Button>
+                                        </div>
+                                        {hasError && (
+                                            <div className="text-red-500 text-sm mt-1">
+                                                {t("resourceNameRequired")}
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            };
+                        }) || []
+                    }
+                />
             </div>
 
             <div style={{ display: 'flex', gap: '16px' }}>
@@ -185,27 +351,23 @@ const AddEditResource = ({
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
                             <a 
-                                href={resource.url} 
+                                href={resource.url.startsWith('/') ? `${window.location.origin}${resource.url}` : resource.url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800"
                             >
-                                {resource.url}
+                                {resource.url.startsWith('/') ? `${window.location.origin}${resource.url}` : resource.url}
                             </a>
-                           
-                                
-                                {resource?.url && (
-                                    <button 
-                                        onClick={handleDeleteUrl}
-                                        className="text-red-500 hover:text-red-700 underline ml-2"
-                                        type="button"
-                                    >
-                                        {t('deleteUrl')}
-                                    </button>
-                                )}
-                            
+                            {resource?.url && (
+                                <button 
+                                    onClick={handleDeleteUrl}
+                                    className="text-red-500 hover:text-red-700 underline ml-2"
+                                    type="button"
+                                >
+                                    {t('deleteUrl')}
+                                </button>
+                            )}
                         </div>
-
                     </div>
                 ) : (
                     <Dragger {...uploadProps}>
@@ -226,14 +388,14 @@ const AddEditResource = ({
                 onOk={handleManualUrlSubmit}
                 onCancel={() => {
                     setIsManualUrlModalVisible(false);
-                    setManualUrl('https://');
+                    setManualUrl('');
                 }}
                 okText={t('confirm')}
                 cancelText={t('cancel')}
             >
                 <Form.Item
-                    validateStatus={manualUrl !== 'https://' && !isValidUrl(manualUrl) ? 'error' : ''}
-                    help={manualUrl !== 'https://' && !isValidUrl(manualUrl) ? t('invalidUrlHint') : ''}
+                    validateStatus={manualUrl && manualUrl !== 'https://' && !isValidUrl(manualUrl) ? 'error' : ''}
+                    help={manualUrl && manualUrl !== 'https://' && !isValidUrl(manualUrl) ? t('invalidUrlHint') : ''}
                 >
                     <Input
                         placeholder={t('enterUrlPlaceholder')}
@@ -249,10 +411,22 @@ const AddEditResource = ({
             </Modal>
 
             <div>
-                <div className="mb-2">{t('markdown')}</div>
-                <MdEditor
-                    content={resource?.markdown}
-                    onChange={(markdown) => handleChange('markdown', markdown)}
+                <div className="mb-2">{t('markdowns')}</div>
+                <Tabs
+                    activeKey={markdownTab}
+                    onChange={setMarkdownTab}
+                    items={languages
+                        .map(language => ({
+                            key: language.id,
+                            label: language.name,
+                            children: (
+                                <MdEditor
+                                    content={resource?.markdowns?.[language.id] || ''}
+                                    onChange={(markdown) => handleLanguageMarkdownChange(language.id, markdown)}
+                                />
+                            )
+                        })) || []
+                    }
                 />
             </div>
         </Space>

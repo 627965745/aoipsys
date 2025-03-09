@@ -15,15 +15,18 @@ import {
     createProduct,
     updateProduct,
     getCategoryDropdown,
+    getLanguageCombo,
 } from "../../api/api";
 import {
     SearchOutlined,
     PlusOutlined,
     CheckOutlined,
     CloseOutlined,
+    TranslationOutlined,
 } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
+import AddEdit from './AddEdit';
 
 const ProductList = () => {
     const { t } = useTranslation();
@@ -40,11 +43,13 @@ const ProductList = () => {
     const [newProduct, setNewProduct] = useState({
         name: "",
         category: undefined,
+        names: {},
         enabled: 1,
     });
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [languages, setLanguages] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const [currentCategoryName, setCurrentCategoryName] = useState("");
     const [pageSize, setPageSize] = useState(10);
@@ -61,6 +66,20 @@ const ProductList = () => {
         } catch (error) {
             console.error("Error fetching categories:", error);
             message.error(t("fetchCategoriesError"));
+        }
+    };
+
+    const fetchLanguages = async () => {
+        setLoading(true);
+        try {
+            const response = await getLanguageCombo();
+            if (response.data.status === 0) {
+                setLanguages(response.data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching languages:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -97,6 +116,7 @@ const ProductList = () => {
 
         const fetchInitialData = async () => {
             try {
+                await fetchLanguages();
                 const categoriesResponse = await getCategoryDropdown();
                 if (categoriesResponse.data.status === 0) {
                     const categoryData = categoriesResponse.data.data || [];
@@ -140,6 +160,7 @@ const ProductList = () => {
         setNewProduct({
             name: "",
             category: undefined,
+            names: {},
             enabled: 1,
         });
     };
@@ -149,12 +170,7 @@ const ProductList = () => {
     };
 
     const handleCreate = async () => {
-        if (!newProduct.name.trim()) {
-            message.error(t("productNameRequired"));
-            return;
-        }
-        if (!newProduct.category) {
-            message.error(t("categoryRequired"));
+        if (setNewProduct.validate && !setNewProduct.validate()) {
             return;
         }
 
@@ -162,11 +178,18 @@ const ProductList = () => {
             const response = await createProduct({
                 name: newProduct.name.trim(),
                 category: newProduct.category,
+                names: newProduct.names || {},
                 enabled: newProduct.enabled,
             });
 
             if (response.data.status === 0) {
                 message.success(t("productCreateSuccess"));
+                setNewProduct({
+                    name: "",
+                    category: undefined,
+                    names: {},
+                    enabled: 1,
+                });
                 setIsModalVisible(false);
                 fetchData(1, nameFilter, categoryFilter);
             } else {
@@ -182,7 +205,8 @@ const ProductList = () => {
         setEditingProduct({
             id: record.id,
             name: record.name,
-            category: record.category_name,
+            category: record.category,
+            names: record.names || {},
             enabled: record.enabled,
         });
         setEditModalVisible(true);
@@ -194,12 +218,7 @@ const ProductList = () => {
     };
 
     const handleUpdate = async () => {
-        if (!editingProduct.name.trim()) {
-            message.error(t("productNameRequired"));
-            return;
-        }
-        if (!editingProduct.category) {
-            message.error(t("categoryRequired"));
+        if (setEditingProduct.validate && !setEditingProduct.validate()) {
             return;
         }
 
@@ -208,6 +227,7 @@ const ProductList = () => {
                 id: editingProduct.id,
                 name: editingProduct.name.trim(),
                 category: editingProduct.category,
+                names: editingProduct.names || {},
                 enabled: editingProduct.enabled,
             });
 
@@ -231,18 +251,48 @@ const ProductList = () => {
         fetchData(1, nameFilter, "");
     };
 
+    const ProductNameCell = ({ record, languages }) => {
+        const [showTranslations, setShowTranslations] = useState(false);
+        
+        return (
+            <div>
+                <div className="flex items-center">
+                    <Link
+                        to={`/admin/resource?product=${record.id}`}
+                        className="text-blue-600 hover:text-blue-800 mr-2"
+                    >
+                        {record.name}
+                    </Link>
+                    <TranslationOutlined 
+                        className="text-gray-400 cursor-pointer hover:text-blue-500"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTranslations(!showTranslations);
+                        }}
+                    />
+                </div>
+                
+                {showTranslations && record.names && Object.entries(record.names).length > 0 && (
+                    <div className="mt-1">
+                        {Object.entries(record.names).map(([langId, data]) => {
+                            const langName = languages?.find(l => l.id === langId)?.name || langId;
+                            return (
+                                <div key={langId} className="text-xs text-gray-400">
+                                    {langName}: {data}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const columns = [
         {
             title: t("productName"),
             dataIndex: "name",
-            render: (text, record) => (
-                <Link
-                    to={`/admin/resource?product=${record.id}`}
-                    className="text-blue-600 hover:text-blue-800"
-                >
-                    {text}
-                </Link>
-            ),
+            render: (text, record) => <ProductNameCell record={record} languages={languages} />,
             filterDropdown: ({
                 setSelectedKeys,
                 selectedKeys,
@@ -439,50 +489,12 @@ const ProductList = () => {
                 okText={t("confirm")}
                 cancelText={t("cancel")}
             >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                    <Input
-                        placeholder={t("enterProductName")}
-                        value={newProduct.name}
-                        onChange={(e) =>
-                            setNewProduct({
-                                ...newProduct,
-                                name: e.target.value,
-                            })
-                        }
-                    />
-                    <Select
-                        placeholder={t("selectCategory")}
-                        value={newProduct.category}
-                        onChange={(value) =>
-                            setNewProduct({
-                                ...newProduct,
-                                category: value,
-                            })
-                        }
-                        style={{ width: "100%" }}
-                    >
-                        {categories.map((category) => (
-                            <Select.Option
-                                key={category.id}
-                                value={category.id}
-                            >
-                                {category.name}
-                            </Select.Option>
-                        ))}
-                    </Select>
-                    <Radio.Group
-                        value={newProduct.enabled}
-                        onChange={(e) =>
-                            setNewProduct({
-                                ...newProduct,
-                                enabled: e.target.value,
-                            })
-                        }
-                    >
-                        <Radio value={1}>{t("enabled")}</Radio>
-                        <Radio value={0}>{t("disabled")}</Radio>
-                    </Radio.Group>
-                </Space>
+                <AddEdit
+                    product={newProduct}
+                    onChange={setNewProduct}
+                    categories={categories}
+                    languages={languages}
+                />
             </Modal>
             <Modal
                 title={t("editProduct")}
@@ -492,51 +504,14 @@ const ProductList = () => {
                 okText={t("confirm")}
                 cancelText={t("cancel")}
             >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                    <Input
-                        placeholder={t("enterProductName")}
-                        value={editingProduct?.name}
-                        onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                name: e.target.value,
-                            })
-                        }
+                {editingProduct && (
+                    <AddEdit
+                        product={editingProduct}
+                        onChange={setEditingProduct}
+                        categories={categories}
+                        languages={languages}
                     />
-                    <Select
-                        placeholder={t("selectCategory")}
-                        value={editingProduct?.category}
-                        defaultValue={editingProduct?.category}
-                        onChange={(value) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                category: value,
-                            })
-                        }
-                        style={{ width: "100%" }}
-                    >
-                        {categories.map((category) => (
-                            <Select.Option
-                                key={category.id}
-                                value={category.id}
-                            >
-                                {category.name}
-                            </Select.Option>
-                        ))}
-                    </Select>
-                    <Radio.Group
-                        value={editingProduct?.enabled}
-                        onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                enabled: e.target.value,
-                            })
-                        }
-                    >
-                        <Radio value={1}>{t("enabled")}</Radio>
-                        <Radio value={0}>{t("disabled")}</Radio>
-                    </Radio.Group>
-                </Space>
+                )}
             </Modal>
         </div>
     );

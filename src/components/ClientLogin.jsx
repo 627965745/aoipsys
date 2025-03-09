@@ -18,7 +18,7 @@ const ClientLogin = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const url = "https://rentwx.highmec.com/obj/Common/Captcha/get";
+            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
             const uniqueUrl = `${url}?t=${new Date().getTime()}`;
             setCaptchaUrl(uniqueUrl);
         } catch (error) {
@@ -132,12 +132,6 @@ const ClientLogin = () => {
                             >
                                 {t("register")}
                             </Button>
-                        </Link>
-                        <Link
-                            to="/forget"
-                            className="text-md text-gray-600 hover:text-gray-900 flex items-center justify-center"
-                        >
-                            {t("forgetPassword")}
                         </Link>
                         <Link
                             to="/admin/login"

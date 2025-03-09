@@ -19,7 +19,7 @@ const LoginForm = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const url = "https://rentwx.highmec.com/obj/Common/Captcha/get";
+            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
             const uniqueUrl = `${url}?t=${new Date().getTime()}`;
 
             setCaptchaUrl(uniqueUrl);

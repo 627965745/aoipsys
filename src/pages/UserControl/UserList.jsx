@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, message, Space, Input, Radio, Select } from 'antd';
-import { PlusOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, CheckOutlined, CloseOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { getUserList, createUser, updateUser, resetUserPassword } from '../../api/api';
 import { useTranslation } from 'react-i18next';
 import AddEditUser from './AddEdit';
@@ -23,7 +23,11 @@ const UserList = () => {
         email: "",
         level: 0,
         group: 0,
-        enabled: 1
+        enabled: 1,
+        company: "",
+        position: "",
+        industry: "",
+        contact: ""
     });
 
     const [editingUser, setEditingUser] = useState(null);
@@ -72,7 +76,11 @@ const UserList = () => {
             email: "",
             level: 0,
             group: 0,
-            enabled: 1
+            enabled: 1,
+            company: "",
+            position: "",
+            industry: "",
+            contact: ""
         });
     };
 
@@ -83,7 +91,11 @@ const UserList = () => {
             email: "",
             level: 0,
             group: 0,
-            enabled: 1
+            enabled: 1,
+            company: "",
+            position: "",
+            industry: "",
+            contact: ""
         });
     };
 
@@ -103,17 +115,19 @@ const UserList = () => {
                 email: newUser.email.trim(),
                 level: newUser.level,
                 group: newUser.group,
-                enabled: newUser.enabled
+                enabled: newUser.enabled,
+                company: newUser.company,
+                position: newUser.position,
+                industry: newUser.industry,
+                contact: newUser.contact
             });
 
             if (response.data.status === 0) {
                 message.success(t('operationSuccess'));
-                setSuccessMessage(responseMessage);
+                setSuccessMessage(response.data.message || t('userCreateSuccess'));
                 setSuccessModalVisible(true);
                 setIsModalVisible(false);
                 fetchData(1);
-
-                alert(JSON.stringify(response.data, null, 2));
             } else {
                 message.error(t('userCreateError'));
             }
@@ -130,7 +144,11 @@ const UserList = () => {
             email: record.email,
             level: record.level,
             group: record.group,
-            enabled: record.enabled
+            enabled: record.enabled,
+            company: record.company || "",
+            position: record.position || "",
+            industry: record.industry || "",
+            contact: record.contact || ""
         });
         setEditModalVisible(true);
     };
@@ -157,7 +175,11 @@ const UserList = () => {
                 email: editingUser.email.trim(),
                 level: editingUser.level,
                 group: editingUser.group,
-                enabled: editingUser.enabled
+                enabled: editingUser.enabled,
+                company: editingUser.company,
+                position: editingUser.position,
+                industry: editingUser.industry,
+                contact: editingUser.contact
             });
 
             if (response.data.status === 0) {
@@ -185,8 +207,7 @@ const UserList = () => {
 
             if (response.data.status === 0) {
                 message.success(t('resetPasswordSuccess'));
-                setSuccessMessage(response.data.message);
-                setSuccessModalVisible(true);
+                setSuccessMessage(response.data.message || t('resetPasswordSuccess'));
                 setSuccessModalVisible(true);
                 setResetPasswordModalVisible(false);
             } else {
@@ -201,6 +222,56 @@ const UserList = () => {
     const handleSearch = (value) => {
         setSearchQuery(value);
         fetchData(1, value);
+    };
+
+    // Define expandable row content
+    const expandedRowRender = (record) => {
+        const detailColumns = [
+            {
+                title: t('accessLevel'),
+                dataIndex: 'level',
+                key: 'level',
+                width: '20%',
+                align: 'center',
+            },
+            {
+                title: t('userGroup'),
+                dataIndex: 'group',
+                key: 'group',
+                width: '20%',
+                align: 'center',
+            },
+            {
+                title: t('lastLogin'),
+                dataIndex: 'time_login_last',
+                key: 'time_login_last',
+                width: '20%',
+                render: (time_login_last) => (
+                    time_login_last ? time_login_last : <span className="text-gray-400">{t('neverLoggedIn')}</span>
+                )
+            },
+            {
+                title: t('timeCreated'),
+                dataIndex: 'time_created',
+                key: 'time_created',
+                width: '20%',
+            },
+            {
+                title: t('timeUpdated'),
+                dataIndex: 'time_updated',
+                key: 'time_updated',
+                width: '20%',
+            },
+        ];
+
+        return (
+            <Table 
+                columns={detailColumns} 
+                dataSource={[record]} 
+                pagination={false} 
+                rowKey="id"
+            />
+        );
     };
 
     const columns = [
@@ -238,34 +309,36 @@ const UserList = () => {
             width: '15%',
         },
         {
-            title: t('accessLevel'),
-            dataIndex: 'level',
-            width: '8%',
-            align: 'center',
-        },
-        {
-            title: t('userGroup'),
-            dataIndex: 'group',
-            width: '8%',
-            align: 'center',
-        },
-        {
-            title: t('lastLogin'),
-            dataIndex: 'time_login_last',
-            width: '12%',
-            render: (time_login_last) => (
-                time_login_last ? time_login_last : <span className="text-gray-400">{t('neverLoggedIn')}</span>
+            title: t('company'),
+            dataIndex: 'company',
+            width: '15%',
+            render: (company) => (
+                company ? company : <span className="text-gray-400">{t('notProvided')}</span>
             )
         },
         {
-            title: t('timeCreated'),
-            dataIndex: 'time_created',
-            width: '12%',
+            title: t('position'),
+            dataIndex: 'position',
+            width: '10%',
+            render: (position) => (
+                position ? position : <span className="text-gray-400">{t('notProvided')}</span>
+            )
         },
         {
-            title: t('timeUpdated'),
-            dataIndex: 'time_updated',
-            width: '12%',
+            title: t('industry'),
+            dataIndex: 'industry',
+            width: '10%',
+            render: (industry) => (
+                industry ? industry : <span className="text-gray-400">{t('notProvided')}</span>
+            )
+        },
+        {
+            title: t('contact'),
+            dataIndex: 'contact',
+            width: '15%',
+            render: (contact) => (
+                contact ? contact : <span className="text-gray-400">{t('notProvided')}</span>
+            )
         },
         {
             title: t('status'),
@@ -281,7 +354,7 @@ const UserList = () => {
         {
             title: t('action'),
             key: 'action',
-            width: '15%',
+            width: '10%',
             align: 'center',
             render: (_, record) => (
                 <Space>
@@ -348,6 +421,10 @@ const UserList = () => {
                         }
                         fetchData(page, searchQuery);
                     },
+                }}
+                expandable={{
+                    expandedRowRender,
+                    expandRowByClick: false,
                 }}
                 loading={loading}
                 rowKey="id"

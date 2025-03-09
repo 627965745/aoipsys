@@ -2,7 +2,7 @@ import axios from "axios";
 import qs from "qs";
 
 const instance = axios.create({
-    baseURL: "https://rentwx.highmec.com/obj",
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     timeout: 10000,
     headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -100,6 +100,23 @@ export const getResource = (data) => {
     return instance.post("/Client/Search/resource", qs.stringify(data));
 };
 export const getResourceCondition = (data) => {
-    return instance.post("/Client/Search/condition");
+    return instance.post("/Client/Search/condition", qs.stringify(data));
 };
+
+export const getLanguageList = (data) => {
+  return instance.post("/Admin/Language/read", qs.stringify(data));
+};
+
+export const getLanguageCombo = (data) => {
+  return instance.post("/Common/Language/combo");
+};
+
+export const createLanguage = (data) => {
+  return instance.post("/Admin/Language/create", qs.stringify(data));
+};
+
+export const updateLanguage = (data) => {
+  return instance.post("/Admin/Language/update", qs.stringify(data));
+};
+
 export default instance;

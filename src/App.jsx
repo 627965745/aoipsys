@@ -15,7 +15,7 @@ import ClientHome from "./pages/ClientHome/Home";
 import ClientAppLayout from "./components/ClientAppLayout";
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-
+import LangPage from "./pages/LanguageControl/LangPage";
 function App() {
     return (
         <Router>
@@ -39,6 +39,7 @@ function App() {
                         <Route path="product" element={<ProductPage />} />
                         <Route path="resource" element={<ResourcePage />} />
                         <Route path="user" element={<UserPage />} />
+                        <Route path="language" element={<LangPage />} />
                         <Route path="login" element={<AdminLoginPage />} />
                     </Route>
 
@@ -50,7 +51,6 @@ function App() {
                     }>
                         <Route path="" element={<ClientHome />} />
                         <Route path="register" element={<Register />} />
-                        <Route path="forget" element={<Register />} />
                         <Route path="login" element={<ClientLoginPage />} />
                     </Route>
                 </Routes>

@@ -5,7 +5,7 @@ import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import GroupError from './GroupError';
 
-const PUBLIC_PATHS = ['/login', '/admin/login', '/register', '/forget'];
+const PUBLIC_PATHS = ['/login', '/admin/login', '/register'];
 const LOGIN_PATHS = ['/login', '/admin/login'];
 
 export const ProtectedRoute = ({ children, requiredGroups = [] }) => {

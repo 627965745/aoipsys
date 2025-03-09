@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
-import { Table, Input, Button, message, Modal, Radio, Space } from "antd";
+import { Table, Input, Button, message, Modal, Radio, Space, Tabs } from "antd";
 import { Link, useNavigate } from "react-router-dom"; // Add this import
 import { useTranslation } from "react-i18next";
-import { getCategoryList, createCategory, updateCategory } from "../../api/api";
+import { getCategoryList, createCategory, updateCategory, getLanguageCombo } from "../../api/api";
 import {
     SearchOutlined,
     PlusOutlined,
     CheckOutlined,
     CloseOutlined,
+    TranslationOutlined
 } from "@ant-design/icons";
+import AddEdit from './AddEdit';
 
 const CategoryList = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
@@ -21,11 +23,15 @@ const CategoryList = () => {
     });
     const [nameFilter, setNameFilter] = useState("");
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [enabled, setEnabled] = useState(1);
+    const [newCategory, setNewCategory] = useState({
+        name: "",
+        names: {},
+        enabled: 1,
+    });
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
     const [pageSize, setPageSize] = useState(10);
+    const [languages, setLanguages] = useState();
 
     const fetchData = async (page = 1, query = "") => {
         setLoading(true);
@@ -56,12 +62,31 @@ const CategoryList = () => {
 
     useEffect(() => {
         fetchData();
+        fetchLanguages();
     }, []);
+
+    const fetchLanguages = async () => {
+        setLoading(true);
+        try {
+            const response = await getLanguageCombo();
+            if (response.data.status === 0) {
+                setLanguages(response.data.data);
+
+            }
+        } catch (error) {
+            console.error("Error fetching languages:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAdd = () => {
         setIsModalVisible(true);
-        setNewCategoryName("");
-        setEnabled(1);
+        setNewCategory({
+            name: "",
+            names: {},
+            enabled: 1,
+        });
     };
 
     const handleCancel = () => {
@@ -69,19 +94,25 @@ const CategoryList = () => {
     };
 
     const handleCreate = async () => {
-        if (!newCategoryName.trim()) {
-            message.error(t("categoryNameRequired"));
+        // Call validation before submitting
+        if (!setNewCategory.validate || !setNewCategory.validate()) {
             return;
         }
-
+        
         try {
             const response = await createCategory({
-                name: newCategoryName.trim(),
-                enabled: enabled,
+                name: newCategory.name,
+                names: newCategory.names,
+                enabled: newCategory.enabled
             });
 
             if (response.data.status === 0) {
                 message.success(t("categoryCreateSuccess"));
+                setNewCategory({
+                    name: "",
+                    names: {},
+                    enabled: 1,
+                });
                 setIsModalVisible(false);
                 fetchData(1, nameFilter);
             } else {
@@ -97,6 +128,7 @@ const CategoryList = () => {
         setEditingCategory({
             id: record.id,
             name: record.name,
+            names: record.names || {},  // Ensure names is initialized as an object
             enabled: record.enabled,
         });
         setEditModalVisible(true);
@@ -108,24 +140,26 @@ const CategoryList = () => {
     };
 
     const handleUpdate = async () => {
-        if (!editingCategory.name.trim()) {
-            message.error(t("categoryNameRequired"));
+        // Call validation before submitting
+        if (!setEditingCategory.validate || !setEditingCategory.validate()) {
             return;
         }
-
+        
         try {
             const response = await updateCategory({
                 id: editingCategory.id,
-                name: editingCategory.name.trim(),
-                enabled: editingCategory.enabled,
+                name: editingCategory.name,
+                names: editingCategory.names,
+                enabled: editingCategory.enabled
             });
 
             if (response.data.status === 0) {
                 message.success(t("categoryUpdateSuccess"));
+                setEditingCategory(null);
                 setEditModalVisible(false);
                 fetchData(pagination.current, nameFilter);
             } else {
-                message.error(t("categoryUpdateError"));
+                message.error(response.data.msg || t("categoryUpdateError"));
             }
         } catch (error) {
             console.error("Error updating category:", error);
@@ -133,24 +167,49 @@ const CategoryList = () => {
         }
     };
 
+    // Create a separate component for the category name cell
+    const CategoryNameCell = ({ record, languages }) => {
+        const [showTranslations, setShowTranslations] = useState(false);
+        
+        return (
+            <div>
+                <div className="flex items-center">
+                    <Link
+                        to={`/admin/product?category=${record.id}`}
+                        className="text-blue-600 hover:text-blue-800 mr-2"
+                    >
+                        {record.name}
+                    </Link>
+                    <TranslationOutlined 
+                        className="text-gray-400 cursor-pointer hover:text-blue-500"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTranslations(!showTranslations);
+                        }}
+                    />
+                </div>
+                
+                {showTranslations && record.names && Object.entries(record.names).length > 0 && (
+                    <div className="mt-1">
+                        {Object.entries(record.names).map(([langId, data]) => {
+                            const langName = languages?.find(l => l.id === langId)?.name || langId;
+                            return (
+                                <div key={langId} className="text-xs text-gray-400">
+                                    {langName}: {data}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const columns = [
         {
             title: t("categoryName"),
             dataIndex: "name",
-            render: (text, record) => (
-                record.enabled ? (
-                    <Link
-                        to={`/admin/product?category=${record.id}`}
-                        className="text-blue-600 hover:text-blue-800"
-                    >
-                        {text}
-                    </Link>
-                ) : (
-                    <span className="text-gray-400">
-                        {text}
-                    </span>
-                )
-            ),
+            render: (_, record) => <CategoryNameCell record={record} languages={languages} />,
             filterDropdown: ({
                 setSelectedKeys,
                 selectedKeys,
@@ -255,101 +314,74 @@ const CategoryList = () => {
     };
 
     return (
-
-            <div className="flex flex-col mb-4">
-                <h1 className="text-2xl font-bold">
-                    {t("categoryManagement")}
-                </h1>
-                <div className="flex justify-start mb-4 mt-4">
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={handleAdd}
-                    >
-                        {t("addCategory")}
-                    </Button>
-                </div>
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    pagination={{
-                        total: pagination.total,
-                        current: pagination.current,
-                        pageSize: pageSize,
-                        showSizeChanger: true,
-                        pageSizeOptions: ['10', '20', '50', '100'],
-                        showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
-                        onChange: (page, newPageSize) => {
-                            setPagination(prev => ({
-                                ...prev,
-                                current: page,
-                            }));
-                            if (newPageSize !== pageSize) {
-                                setPageSize(newPageSize);
-                            }
-                            fetchData(page, nameFilter);
-                        },
-                    }}
-                    loading={loading}
-                    rowKey="id"
-                />
-                <Modal
-                    title={t("addCategory")}
-                    open={isModalVisible}
-                    onOk={handleCreate}
-                    onCancel={handleCancel}
-                    okText={t("confirm")}
-                    cancelText={t("cancel")}
+        <div className="flex flex-col mb-4">
+            <h1 className="text-2xl font-bold">
+                {t("categoryManagement")}
+            </h1>
+            <div className="flex justify-start mb-4 mt-4">
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAdd}
                 >
-                    <Space direction="vertical" style={{ width: "100%" }}>
-                        <Input
-                            placeholder={t("enterCategoryName")}
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                        />
-                        <Radio.Group
-                            value={enabled}
-                            onChange={(e) => setEnabled(e.target.value)}
-                        >
-                            <Radio value={1}>{t("enabled")}</Radio>
-                            <Radio value={0}>{t("disabled")}</Radio>
-                        </Radio.Group>
-                    </Space>
-                </Modal>
-                <Modal
-                    title={t("editCategory")}
-                    open={editModalVisible}
-                    onOk={handleUpdate}
-                    onCancel={handleEditCancel}
-                    okText={t("confirm")}
-                    cancelText={t("cancel")}
-                >
-                    <Space direction="vertical" style={{ width: "100%" }}>
-                        <Input
-                            placeholder={t("enterCategoryName")}
-                            value={editingCategory?.name}
-                            onChange={(e) =>
-                                setEditingCategory({
-                                    ...editingCategory,
-                                    name: e.target.value,
-                                })
-                            }
-                        />
-                        <Radio.Group
-                            value={editingCategory?.enabled}
-                            onChange={(e) =>
-                                setEditingCategory({
-                                    ...editingCategory,
-                                    enabled: e.target.value,
-                                })
-                            }
-                        >
-                            <Radio value={1}>{t("enabled")}</Radio>
-                            <Radio value={0}>{t("disabled")}</Radio>
-                        </Radio.Group>
-                    </Space>
-                </Modal>
+                    {t("addCategory")}
+                </Button>
             </div>
+            <Table
+                columns={columns}
+                dataSource={data}
+                pagination={{
+                    total: pagination.total,
+                    current: pagination.current,
+                    pageSize: pageSize,
+                    showSizeChanger: true,
+                    pageSizeOptions: ['10', '20', '50', '100'],
+                    showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
+                    onChange: (page, newPageSize) => {
+                        setPagination(prev => ({
+                            ...prev,
+                            current: page,
+                        }));
+                        if (newPageSize !== pageSize) {
+                            setPageSize(newPageSize);
+                        }
+                        fetchData(page, nameFilter);
+                    },
+                }}
+                loading={loading}
+                rowKey="id"
+            />
+            <Modal
+                title={t("addCategory")}
+                open={isModalVisible}
+                onOk={handleCreate}
+                onCancel={handleCancel}
+                okText={t("confirm")}
+                cancelText={t("cancel")}
+            >
+                <AddEdit
+                    category={newCategory}
+                    onChange={setNewCategory}
+                    languages={languages}
+                />
+            </Modal>
+            <Modal
+                title={t("editCategory")}
+                open={editModalVisible}
+                onOk={handleUpdate}
+                onCancel={handleEditCancel}
+                okText={t("confirm")}
+                cancelText={t("cancel")}
+            >
+                {editingCategory && (
+                    <AddEdit
+                        category={editingCategory}
+                        onChange={setEditingCategory}
+                        languages={languages}
+                    />
+                )}
+            </Modal>
+        </div>
     );
 };
 

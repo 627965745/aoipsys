@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Button, Layout as AntLayout, Menu, theme, Space, message, Select } from 'antd';
 import { useTranslation } from "react-i18next";
-import { logout } from "../api/api";
+import { logout, getLanguageCombo } from "../api/api";
 import { Dropdown } from 'antd';
 import { UserOutlined, LockOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,9 +13,34 @@ const ClientAppLayout = () => {
     const { i18n, t } = useTranslation();
     const navigate = useNavigate();
     const { user, checkAuthStatus } = useAuth();
+    const [languages, setLanguages] = useState([]);
+    const [loadingLanguages, setLoadingLanguages] = useState(false);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
+
+    // Fetch available languages from API
+    useEffect(() => {
+        const fetchLanguages = async () => {
+            setLoadingLanguages(true);
+            try {
+                const response = await getLanguageCombo();
+                if (response.data.status === 0) {
+                    // Filter only enabled languages
+                    setLanguages(response.data.data);
+                } else {
+                    console.error("Failed to fetch languages");
+                }
+            } catch (error) {
+                console.error("Error fetching languages:", error);
+            } finally {
+                setLoadingLanguages(false);
+            }
+        };
+
+        fetchLanguages();
+    }, []);
+
 
     const handleLanguageChange = (value) => {
         i18n.changeLanguage(value);
@@ -88,13 +113,17 @@ const ClientAppLayout = () => {
                     ]}
                 />
                 <Space>
-                    <Select
+                <Select
                         defaultValue={i18n.language}
                         onChange={handleLanguageChange}
                         className="w-[120px]"
+                        loading={loadingLanguages}
                     >
-                        <Select.Option value="en">English</Select.Option>
-                        <Select.Option value="zh">中文</Select.Option>
+                        {languages.map(lang => (
+                            <Select.Option key={lang.id} value={lang.id}>
+                                {lang.name}
+                            </Select.Option>
+                        ))}
                     </Select>
                     {user ? (
                         <Dropdown menu={userMenu} placement="bottomRight">

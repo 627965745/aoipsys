@@ -35,6 +35,38 @@ const AddEditUser = ({
                 />
             </div>
             <div>
+                <div className="mb-2">{t('company')}</div>
+                <Input
+                    placeholder={t('enterCompany')}
+                    value={user?.company}
+                    onChange={(e) => handleChange('company', e.target.value)}
+                />
+            </div>
+            <div>
+                <div className="mb-2">{t('position')}</div>
+                <Input
+                    placeholder={t('enterPosition')}
+                    value={user?.position}
+                    onChange={(e) => handleChange('position', e.target.value)}
+                />
+            </div>
+            <div>
+                <div className="mb-2">{t('industry')}</div>
+                <Input
+                    placeholder={t('enterIndustry')}
+                    value={user?.industry}
+                    onChange={(e) => handleChange('industry', e.target.value)}
+                />
+            </div>
+            <div>
+                <div className="mb-2">{t('contact')}</div>
+                <Input
+                    placeholder={t('enterContact')}
+                    value={user?.contact}
+                    onChange={(e) => handleChange('contact', e.target.value)}
+                />
+            </div>
+            <div>
                 <div className="mb-2">{t('accessLevel')}</div>
                 <InputNumber
                     min={0}
