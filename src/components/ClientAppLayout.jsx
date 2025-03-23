@@ -41,6 +41,17 @@ const ClientAppLayout = () => {
         fetchLanguages();
     }, []);
 
+    const getLanguageFlag = (langCode) => {
+        const countryCode = langCode.slice(-2);
+
+        const flagEmoji = countryCode
+            .toUpperCase()
+            .split('')
+            .map(char => String.fromCodePoint(char.charCodeAt(0) + 127397))
+            .join('');
+        
+        return flagEmoji;
+    };
 
     const handleLanguageChange = (value) => {
         i18n.changeLanguage(value);
@@ -116,11 +127,12 @@ const ClientAppLayout = () => {
                 <Select
                         defaultValue={i18n.language}
                         onChange={handleLanguageChange}
-                        className="w-[120px]"
+                        className="w-[150px]"
                         loading={loadingLanguages}
                     >
                         {languages.map(lang => (
                             <Select.Option key={lang.id} value={lang.id}>
+                                <span style={{ marginRight: '8px' }}>{getLanguageFlag(lang.id)}</span>
                                 {lang.name}
                             </Select.Option>
                         ))}
