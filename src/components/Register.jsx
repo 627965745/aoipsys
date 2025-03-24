@@ -17,7 +17,7 @@ const Register = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const url = "https://rentwx.highmec.com/obj/Common/Captcha/get";
+            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
             const uniqueUrl = `${url}?t=${new Date().getTime()}`;
             setCaptchaUrl(uniqueUrl);
         } catch (error) {
@@ -61,7 +61,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg relative">
+            <div className="w-full max-w-xl p-8 space-y-8 bg-white rounded-lg shadow-lg relative">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                         {t("register")}
@@ -73,7 +73,7 @@ const Register = () => {
                     onFinish={onFinish}
                     autoComplete="off"
                     layout="vertical"
-                    style={{ maxWidth: 400, margin: "0 auto", padding: "24px" }}
+                    style={{ maxWidth: 600, margin: "0 auto", padding: "24px" }}
                 >
                     <Form.Item
                         name="email"

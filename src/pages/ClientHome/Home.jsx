@@ -20,6 +20,9 @@ import {
     BookOutlined,
     ReadOutlined,
     ExclamationCircleOutlined,
+    AppstoreOutlined,
+    CodeOutlined,
+    EllipsisOutlined,
 } from "@ant-design/icons";
 import MdViewer from "../../components/MdViewer";
 
@@ -126,20 +129,16 @@ const Home = () => {
 
     const typeConfig = {
         0: {
-            key: "tool",
-            icon: <ToolOutlined className="ml-2 text-gray-500" />,
+            key: "document"
         },
         1: {
-            key: "document",
-            icon: <FileTextOutlined className="ml-2 text-gray-500" />,
+            key: "software"
         },
         2: {
-            key: "manual",
-            icon: <BookOutlined className="ml-2 text-gray-500" />,
+            key: "firmware"
         },
         3: {
-            key: "article",
-            icon: <ReadOutlined className="ml-2 text-gray-500" />,
+            key: "other"
         },
     };
 
@@ -195,9 +194,6 @@ const Home = () => {
             render: (type) => (
                 <Space>
                     <span>{t(typeConfig[type]?.key || "notAvailable")}</span>
-                    <Tooltip title={t(typeConfig[type]?.key || "notAvailable")}>
-                        {typeConfig[type]?.icon}
-                    </Tooltip>
                 </Space>
             ),
         },

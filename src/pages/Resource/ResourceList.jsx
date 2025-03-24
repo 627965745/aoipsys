@@ -43,10 +43,10 @@ const ResourceList = () => {
     const [languages, setLanguages] = useState([]);
 
     const typeOptions = [
-        { value: 0, label: t('tool') },
-        { value: 1, label: t('document') },
-        { value: 2, label: t('manual') },
-        { value: 3, label: t('article') }
+        { value: 0, label: t('document') },
+        { value: 1, label: t('software') },
+        { value: 2, label: t('firmware') },
+        { value: 3, label: t('other') }
     ];
 
     const fetchProducts = async () => {

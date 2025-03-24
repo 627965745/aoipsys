@@ -238,6 +238,9 @@ const resources = {
             name: "Name",
             namePlaceholder: "Enter name",
             uploadSuccess: "File uploaded successfully",
+            software: "Software",
+            firmware: "Firmware",
+            other: "Other",
         },
     },
     zh_CN: {
@@ -471,6 +474,9 @@ const resources = {
             name: "名字",
             namePlaceholder: "输入名字",
             uploadSuccess: "文件上传成功",
+            software: "软件",
+            firmware: "固件",
+            other: "其他",
         },
     },
     es_ES: {
@@ -702,6 +708,9 @@ const resources = {
             name: "Nombre",
             namePlaceholder: "Ingrese nombre",
             uploadSuccess: "Archivo subido con éxito",
+            software: "Software",
+            firmware: "Firmware",
+            other: "Otro",
         },
     },
 };
