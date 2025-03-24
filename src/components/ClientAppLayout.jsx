@@ -26,7 +26,6 @@ const ClientAppLayout = () => {
             try {
                 const response = await getLanguageCombo();
                 if (response.data.status === 0) {
-                    // Filter only enabled languages
                     setLanguages(response.data.data);
                 } else {
                     console.error("Failed to fetch languages");

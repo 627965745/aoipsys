@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button, Layout as AntLayout, Menu, theme, Space, message, Select } from 'antd';
 import { useTranslation } from "react-i18next";
-import { logout, getLanguageList } from "../api/api";
+import { logout, getLanguageCombo } from "../api/api";
 import { Dropdown } from 'antd';
 import { UserOutlined, LockOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,16 +35,9 @@ const AdminAppLayout = () => {
 
     const fetchLanguages = async () => {
         try {
-            const response = await getLanguageList({ query: "", page: 1, rows: 100 });
+            const response = await getLanguageCombo();
             if (response.data.status === 0) {
-                setLanguages(response.data.data.rows);
-                // If no language is set, set the first enabled language as default
-                if (!i18n.language && response.data.data.rows.length > 0) {
-                    const defaultLang = response.data.data.rows.find(lang => lang.enabled);
-                    if (defaultLang) {
-                        handleLanguageChange(defaultLang.id);
-                    }
-                }
+                setLanguages(response.data.data);
             }
         } catch (error) {
             console.error("Error fetching languages:", error);
@@ -167,12 +160,12 @@ const AdminAppLayout = () => {
                     ]}
                 />
                 <Space>
-                    <Select
-                        value={i18n.language}
+                <Select
+                        defaultValue={i18n.language}
                         onChange={handleLanguageChange}
-                        className="w-[120px]"
+                        className="w-[150px]"
                     >
-                        {languages.filter(lang => lang.enabled).map(lang => (
+                        {languages.map(lang => (
                             <Select.Option key={lang.id} value={lang.id}>
                                 {lang.name}
                             </Select.Option>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Radio, Space, Select, Upload, message, Button, Modal, Form, Tabs } from "antd";
+import { Input, Radio, Space, Select, Upload, message, Button, Modal, Form, Tabs, Progress } from "antd";
 import MdEditor from '../../components/MdEditor';
 import { InboxOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import { uploadFile } from '../../api/api';
@@ -19,6 +19,9 @@ const AddEditResource = ({
     const [activeTab, setActiveTab] = useState(null);
     const [markdownTab, setMarkdownTab] = useState(null);
     const [errors, setErrors] = useState({});
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     
     // Create refs for input fields
     const inputRefs = useRef({});
@@ -120,16 +123,27 @@ const AddEditResource = ({
     const handleUpload = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
+        setIsUploading(true);
+        setUploadProgress(0);
 
         try {
-            const response = await uploadFile(formData);
+            const response = await uploadFile(formData, {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round(
+                        (progressEvent.loaded * 100) / progressEvent.total
+                    );
+                    setUploadProgress(percentCompleted);
+                    if (percentCompleted === 100) {
+                        setIsProcessing(true);
+                    }
+                }
+            });
+
             if (response.data.status === 0) {
                 const filename = response.data.data;
-                // Store just the relative path in the form data
                 const relativePath = `/uploads/${filename}`;
                 handleChange('url', relativePath);
                 
-                // For display purposes, show the full URL
                 const fullUrl = `${window.location.origin}${relativePath}`;
                 message.success(`${t('uploadSuccess')}: ${fullUrl}`);
                 
@@ -142,6 +156,10 @@ const AddEditResource = ({
             console.error("Upload error:", error);
             message.error(t('uploadError'));
             return Upload.LIST_IGNORE;
+        } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+            setIsProcessing(false);
         }
     };
 
@@ -370,15 +388,36 @@ const AddEditResource = ({
                         </div>
                     </div>
                 ) : (
-                    <Dragger {...uploadProps}>
-                        <p className="ant-upload-drag-icon">
-                            <InboxOutlined />
-                        </p>
-                        <p className="ant-upload-text">{t('clickOrDragFile')}</p>
-                        <p className="ant-upload-hint">
-                            {t('uploadHint')}
-                        </p>
-                    </Dragger>
+                    <div>
+                        {!isUploading && !isProcessing && (
+                            <Dragger {...uploadProps}>
+                                <p className="ant-upload-drag-icon">
+                                    <InboxOutlined />
+                                </p>
+                                <p className="ant-upload-text">{t('clickOrDragFile')}</p>
+                                <p className="ant-upload-hint">
+                                    {t('uploadHint')}
+                                </p>
+                            </Dragger>
+                        )}
+                        {(isUploading || isProcessing) && (
+                            <div className="mt-4">
+                                <Progress 
+                                    percent={uploadProgress} 
+                                    status={uploadProgress === 100 ? "success" : "active"}
+                                    strokeColor={{
+                                        '0%': '#108ee9',
+                                        '100%': '#87d068',
+                                    }}
+                                />
+                                {isProcessing && uploadProgress === 100 && (
+                                    <div className="text-center mt-2 text-gray-600">
+                                        {t('processingFile')}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 

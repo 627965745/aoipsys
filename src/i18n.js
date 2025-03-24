@@ -241,6 +241,7 @@ const resources = {
             software: "Software",
             firmware: "Firmware",
             other: "Other",
+            processingFile: "Processing file...",
         },
     },
     zh_CN: {
@@ -477,6 +478,7 @@ const resources = {
             software: "软件",
             firmware: "固件",
             other: "其他",
+            processingFile: "正在处理文件...",
         },
     },
     es_ES: {
@@ -711,6 +713,7 @@ const resources = {
             software: "Software",
             firmware: "Firmware",
             other: "Otro",
+            processingFile: "Procesando archivo...",
         },
     },
 };

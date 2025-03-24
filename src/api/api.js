@@ -3,7 +3,7 @@ import qs from "qs";
 
 const instance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: 10000,
+    timeout: 60000,
     headers: {
         "Content-Type": "application/x-www-form-urlencoded",
     },
@@ -85,12 +85,8 @@ export const updateUser = (data) => {
 export const resetUserPassword = (data) => {
   return instance.post("/Admin/Operator/reset", qs.stringify(data));
 };
-export const uploadFile = (formData) => {
-    return instance.post("/Admin/Upload/upload", formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'  // Override default content type for file upload
-        }
-    });
+export const uploadFile = (formData, config) => {
+    return instance.post("/Admin/Upload/upload", formData, config);
 };
 export const resetPassword = (data) => {
     return instance.post("/Common/User/reset", qs.stringify(data));
