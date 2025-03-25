@@ -3,7 +3,6 @@ import qs from "qs";
 import i18next from 'i18next';
 
 const getErrorMessage = (status, endpoint = '') => {
-    console.log(status, endpoint);
     if ([21, 11, 12, 22, 51, 52, 61].includes(status)) {
         return i18next.t(`error.${status}`);
     }
