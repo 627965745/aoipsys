@@ -1,14 +1,56 @@
 import axios from "axios";
 import qs from "qs";
+import i18next from 'i18next';
+
+const getErrorMessage = (status, endpoint = '') => {
+    if ([21, 11, 12, 22, 51, 52, 61].includes(status)) {
+        return i18next.t(`error.${status}`);
+    }
+    switch (endpoint) {
+        case '/Common/User/check':
+            if (status === 101) {
+                return i18next.t('error.check.101');
+            }
+            break;
+        case '/Common/User/reset':
+            if ([101, 102, 103, 104].includes(status)) {
+                return i18next.t(`error.reset.${status}`);
+            }
+            break;
+        case '/Common/Login/login':
+            if ([101, 102, 103, 104].includes(status)) {
+                return i18next.t(`error.login.${status}`);
+            }
+            break;
+        case '/Common/Login/register':
+            if ([101, 102, 103].includes(status)) {
+                return i18next.t(`error.register.${status}`);
+            }
+            break;
+    }
+    return i18next.t('unknownError', 'An unknown error occurred');
+};
 
 const instance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: 60000,
+    timeout: 1200000,
     headers: {
         "Content-Type": "application/x-www-form-urlencoded",
     },
     withCredentials: true,
 });
+
+instance.interceptors.response.use(
+    (response) => {
+        if (response.data.status !== 0) {
+            response.data.message = getErrorMessage(response.data.status, response.config.url);
+        }
+        return response;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const getCaptcha = () => {
     return instance.get(`/Common/Captcha/get?t=${new Date().getTime()}`);

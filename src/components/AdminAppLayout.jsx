@@ -56,7 +56,7 @@ const AdminAppLayout = () => {
                 await checkAuthStatus();
                 navigate("/admin/login");
             } else {
-                message.error(response.data.message || t("logoutFailed"));
+                message.error(response.data.message);
             }
         } catch (error) {
             message.error(t("logoutError"));
