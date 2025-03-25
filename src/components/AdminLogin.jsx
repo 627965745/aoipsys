@@ -41,12 +41,12 @@ const LoginForm = () => {
                 message.success(t("loginSuccess"));
                 navigate("/admin", { replace: true });
             } else {
-                message.error(response.data.message || t("loginFailed"));
+                message.error(error.response?.data?.message || t("loginFailed"));
                 setCaptchaValue("");
                 fetchCaptcha();
             }
         } catch (error) {
-            message.error(t("loginError"));
+            message.error(error.response?.data?.message || t("loginError"));
             setCaptchaValue("");
             fetchCaptcha();
         }

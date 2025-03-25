@@ -149,12 +149,12 @@ const AddEditResource = ({
                 
                 return false;
             } else {
-                message.error(t('uploadError'));
+                message.error(error.response?.data?.message || t('uploadError'));
                 return Upload.LIST_IGNORE;
             }
         } catch (error) {
             console.error("Upload error:", error);
-            message.error(t('uploadError'));
+            message.error(error.response?.data?.message || t('uploadError'));
             return Upload.LIST_IGNORE;
         } finally {
             setIsUploading(false);

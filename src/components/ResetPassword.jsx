@@ -37,7 +37,7 @@ const ResetPassword = () => {
 
     const handleSubmit = async (values) => {
         if (values.newPassword !== values.confirmPassword) {
-            message.error(t("passwordsNotMatch"));
+            message.error(error.response?.data?.message || t("passwordsNotMatch"));
             return;
         }
 
@@ -59,7 +59,7 @@ const ResetPassword = () => {
                     navigate(source === "admin" ? "/admin/login" : "/login", { replace: true });
                 }
             } else {
-                message.error(response.data?.message || t("passwordResetError"));
+                message.error(error.response?.data?.message || t("passwordResetError"));
                 refreshCaptcha();
                 form.setFieldsValue({ captcha: "" });
                 form.resetFields(["captcha"]);

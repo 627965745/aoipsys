@@ -45,11 +45,11 @@ const LangList = () => {
                     total: response.data.data.total,
                 });
             } else {
-                message.error(t('fetchLanguagesError'));
+                message.error(error.response?.data?.message || t('fetchLanguagesError'));
             }
         } catch (error) {
             console.error("Error fetching languages:", error);
-            message.error(t('fetchLanguagesError'));
+            message.error(error.response?.data?.message || t('fetchLanguagesError'));
         } finally {
             setLoading(false);
         }
@@ -91,11 +91,11 @@ const LangList = () => {
                 setIsModalVisible(false);
                 fetchData(1);
             } else {
-                message.error(t('languageCreateError'));
+                message.error(error.response?.data?.message || t('languageCreateError'));
             }
         } catch (error) {
             console.error("Error creating language:", error);
-            message.error(t('languageCreateError'));
+            message.error(error.response?.data?.message || t('languageCreateError'));
         }
     };
 
@@ -126,11 +126,11 @@ const LangList = () => {
                 setEditModalVisible(false);
                 fetchData(pagination.current);
             } else {
-                message.error(t('languageUpdateError'));
+                message.error(error.response?.data?.message || t('languageUpdateError'));
             }
         } catch (error) {
             console.error("Error updating language:", error);
-            message.error(t('languageUpdateError'));
+            message.error(error.response?.data?.message || t('languageUpdateError'));
         }
     };
 

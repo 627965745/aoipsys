@@ -50,11 +50,11 @@ const CategoryList = () => {
                     total: response.data.data.total,
                 }));
             } else {
-                message.error(t("fetchCategoriesError"));
+                message.error(error.response?.data?.message || t("fetchCategoriesError"));
             }
         } catch (error) {
             console.error("Error fetching categories:", error);
-            message.error(t("fetchCategoriesError"));
+            message.error(error.response?.data?.message || t("fetchCategoriesError"));
         } finally {
             setLoading(false);
         }
@@ -116,11 +116,11 @@ const CategoryList = () => {
                 setIsModalVisible(false);
                 fetchData(1, nameFilter);
             } else {
-                message.error(t("categoryCreateError"));
+                message.error(error.response?.data?.message || t("categoryCreateError"));
             }
         } catch (error) {
             console.error("Error creating category:", error);
-            message.error(t("categoryCreateError"));
+            message.error(error.response?.data?.message || t("categoryCreateError"));
         }
     };
 
@@ -159,11 +159,11 @@ const CategoryList = () => {
                 setEditModalVisible(false);
                 fetchData(pagination.current, nameFilter);
             } else {
-                message.error(response.data.msg || t("categoryUpdateError"));
+                message.error(error.response?.data?.message || t("categoryUpdateError"));
             }
         } catch (error) {
             console.error("Error updating category:", error);
-            message.error(t("categoryUpdateError"));
+            message.error(error.response?.data?.message || t("categoryUpdateError"));
         }
     };
 

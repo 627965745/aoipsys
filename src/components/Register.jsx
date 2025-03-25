@@ -17,7 +17,9 @@ const Register = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
+            const url = `${
+                import.meta.env.VITE_API_BASE_URL
+            }/Common/Captcha/get`;
             const uniqueUrl = `${url}?t=${new Date().getTime()}`;
             setCaptchaUrl(uniqueUrl);
         } catch (error) {
@@ -36,23 +38,23 @@ const Register = () => {
                 company: values.company || "",
                 position: values.position || "",
                 industry: values.industry || "",
-                contact: values.contact || ""
+                contact: values.contact || "",
             };
 
             const response = await register(registerData);
-            
+
             if (response.data && response.data.status === 0) {
                 message.success(t("registerSuccess"));
                 navigate("/login");
             } else {
-                message.error(t("registerFailed"));
+                message.error(
+                    error.response?.data?.message || t("registerFailed")
+                );
                 fetchCaptcha();
             }
         } catch (error) {
             console.error("Registration error:", error);
-            message.error(
-                error.response?.data?.message || t("registerFailed")
-            );
+            message.error(error.response?.data?.message || t("registerFailed"));
             fetchCaptcha();
         } finally {
             setLoading(false);
@@ -122,15 +124,12 @@ const Register = () => {
                                     validator(_, value) {
                                         if (
                                             !value ||
-                                            getFieldValue("password") ===
-                                                value
+                                            getFieldValue("password") === value
                                         ) {
                                             return Promise.resolve();
                                         }
                                         return Promise.reject(
-                                            new Error(
-                                                t("passwordsNotMatch")
-                                            )
+                                            new Error(t("passwordsNotMatch"))
                                         );
                                     },
                                 }),
@@ -178,10 +177,7 @@ const Register = () => {
                         </Form.Item>
                     </div>
 
-                    <Form.Item
-                        name="contact"
-                        label={t("contact")}
-                    >
+                    <Form.Item name="contact" label={t("contact")}>
                         <Input placeholder={t("contactPlaceholder")} />
                     </Form.Item>
 

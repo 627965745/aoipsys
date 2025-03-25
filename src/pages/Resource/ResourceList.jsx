@@ -55,11 +55,11 @@ const ResourceList = () => {
             if (response.data.status === 0) {
                 setProducts(response.data.data || []);
             } else {
-                message.error(t('fetchProductsError'));
+                message.error(error.response?.data?.message || t('fetchProductsError'));
             }
         } catch (error) {
             console.error("Error fetching products:", error);
-            message.error(t('fetchProductsError'));
+            message.error(error.response?.data?.message || t('fetchProductsError'));
         }
     };
 
@@ -95,11 +95,11 @@ const ResourceList = () => {
                     total: response.data.data.total,
                 }));
             } else {
-                message.error(t('fetchResourcesError'));
+                message.error(error.response?.data?.message || t('fetchResourcesError'));
             }
         } catch (error) {
             console.error("Error fetching resources:", error);
-            message.error(t('fetchResourcesError'));
+            message.error(error.response?.data?.message || t('fetchResourcesError'));
         } finally {
             setLoading(false);
         }
@@ -128,7 +128,7 @@ const ResourceList = () => {
                     }
                 }
             } catch (error) {
-                message.error(t('fetchProductsError'));
+                message.error(error.response?.data?.message || t('fetchProductsError'));
             }
         };
 
@@ -205,11 +205,11 @@ const ResourceList = () => {
                 setIsModalVisible(false);
                 fetchData(1, nameFilter, productFilter);
             } else {
-                message.error(response.data.message || t('resourceCreateError'));
+                message.error(error.response?.data?.message || t('resourceCreateError'));
             }
         } catch (error) {
             console.error("Error creating resource:", error);
-            message.error(t('resourceCreateError'));
+            message.error(error.response?.data?.message || t('resourceCreateError'));
         }
     };
 
@@ -316,11 +316,11 @@ const ResourceList = () => {
                 setEditModalVisible(false);
                 fetchData(pagination.current, nameFilter, productFilter);
             } else {
-                message.error(response.data.message || t('resourceUpdateError'));
+                message.error(error.response?.data?.message || t('resourceUpdateError'));
             }
         } catch (error) {
             console.error("Error updating resource:", error);
-            message.error(t('resourceUpdateError'));
+            message.error(error.response?.data?.message || t('resourceUpdateError'));
         }
     };
 

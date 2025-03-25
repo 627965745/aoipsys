@@ -15,7 +15,7 @@ export const ProtectedRoute = ({ children, requiredGroups = [] }) => {
 
     useEffect(() => {
         if (!PUBLIC_PATHS.includes(location.pathname) && !user) {
-            message.error(t('pleaseLoginFirst'));
+            message.error(error.response?.data?.message || t('pleaseLoginFirst'));
         }
     }, [location.pathname, user, t]);
 

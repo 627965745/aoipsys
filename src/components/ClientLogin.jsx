@@ -39,12 +39,12 @@ const ClientLogin = () => {
                 message.success(t("loginSuccess"));
                 navigate("/", { replace: true });
             } else {
-                message.error(response.data.message || t("loginFailed"));
+                message.error(error.response?.data?.message || t("loginFailed"));
                 fetchCaptcha();
                 setCaptchaValue("");
             }
         } catch (error) {
-            message.error(t("loginError"));
+            message.error(error.response?.data?.message || t("loginError"));
             fetchCaptcha();
             setCaptchaValue("");
         }

@@ -3,6 +3,7 @@ import qs from "qs";
 import i18next from 'i18next';
 
 const getErrorMessage = (status, endpoint = '') => {
+    console.log(status, endpoint);
     if ([21, 11, 12, 22, 51, 52, 61].includes(status)) {
         return i18next.t(`error.${status}`);
     }
@@ -33,7 +34,7 @@ const getErrorMessage = (status, endpoint = '') => {
 
 const instance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: 1200000,
+    timeout: 10000,
     headers: {
         "Content-Type": "application/x-www-form-urlencoded",
     },
@@ -43,12 +44,26 @@ const instance = axios.create({
 instance.interceptors.response.use(
     (response) => {
         if (response.data.status !== 0) {
-            response.data.message = getErrorMessage(response.data.status, response.config.url);
+            const url = new URL(response.config.url, response.config.baseURL);
+            const endpoint = url.pathname;
+            return Promise.reject({
+                response: {
+                    data: {
+                        message: getErrorMessage(response.data.status, endpoint)
+                    }
+                }
+            });
         }
         return response;
     },
     (error) => {
-        return Promise.reject(error);
+        return Promise.reject({
+            response: {
+                data: {
+                    message: i18next.t('networkError', 'Network error occurred')
+                }
+            }
+        });
     }
 );
 
@@ -128,7 +143,10 @@ export const resetUserPassword = (data) => {
   return instance.post("/Admin/Operator/reset", qs.stringify(data));
 };
 export const uploadFile = (formData, config) => {
-    return instance.post("/Admin/Upload/upload", formData, config);
+    return instance.post("/Admin/Upload/upload", formData, {
+        ...config,
+        timeout: 120000
+    });
 };
 export const resetPassword = (data) => {
     return instance.post("/Common/User/reset", qs.stringify(data));

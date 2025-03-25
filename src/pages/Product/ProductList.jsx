@@ -61,11 +61,11 @@ const ProductList = () => {
                 setCategories(response.data.data || []);
                 return response;
             } else {
-                message.error(t("fetchCategoriesError"));
+                message.error(error.response?.data?.message || t("fetchCategoriesError"));
             }
         } catch (error) {
             console.error("Error fetching categories:", error);
-            message.error(t("fetchCategoriesError"));
+            message.error(error.response?.data?.message || t("fetchCategoriesError"));
         }
     };
 
@@ -101,11 +101,11 @@ const ProductList = () => {
                     total: response.data.data.total,
                 }));
             } else {
-                message.error(t("fetchProductsError"));
+                message.error(error.response?.data?.message || t("fetchProductsError"));
             }
         } catch (error) {
             console.error("Error fetching products:", error);
-            message.error(t("fetchProductsError"));
+            message.error(error.response?.data?.message || t("fetchProductsError"));
         } finally {
             setLoading(false);
         }
@@ -130,7 +130,7 @@ const ProductList = () => {
                     }
                 }
             } catch (error) {
-                message.error(t("fetchCategoriesError"));
+                message.error(error.response?.data?.message || t("fetchCategoriesError"));
             }
         };
 
@@ -193,11 +193,11 @@ const ProductList = () => {
                 setIsModalVisible(false);
                 fetchData(1, nameFilter, categoryFilter);
             } else {
-                message.error(t("productCreateError"));
+                message.error(error.response?.data?.message || t("productCreateError"));
             }
         } catch (error) {
             console.error("Error creating product:", error);
-            message.error(t("productCreateError"));
+            message.error(error.response?.data?.message || t("productCreateError"));
         }
     };
 
@@ -236,11 +236,11 @@ const ProductList = () => {
                 setEditModalVisible(false);
                 fetchData(pagination.current, nameFilter, categoryFilter);
             } else {
-                message.error(t("productUpdateError"));
+                message.error(error.response?.data?.message || t("productUpdateError")); 
             }
         } catch (error) {
             console.error("Error updating product:", error);
-            message.error(t("productUpdateError"));
+            message.error(error.response?.data?.message || t("productUpdateError"));
         }
     };
 

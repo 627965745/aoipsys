@@ -56,10 +56,10 @@ const AdminAppLayout = () => {
                 await checkAuthStatus();
                 navigate("/admin/login");
             } else {
-                message.error(response.data.message);
+                message.error(error.response?.data?.message || t("logoutError"));
             }
         } catch (error) {
-            message.error(t("logoutError"));
+            message.error(error.response?.data?.message || t("logoutError"));
             await checkAuthStatus();
             navigate("/admin/login");
         }

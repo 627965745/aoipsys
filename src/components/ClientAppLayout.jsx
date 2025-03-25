@@ -64,10 +64,10 @@ const ClientAppLayout = () => {
                 await checkAuthStatus(); // Update auth context
                 navigate("/login");
             } else {
-                message.error(response.data.message || t("logoutFailed"));
+                message.error(error.response?.data?.message || t("logoutFailed"));
             }
         } catch (error) {
-            message.error(t("logoutError"));
+            message.error(error.response?.data?.message || t("logoutError"));
             await checkAuthStatus(); // Update auth context
             navigate("/login");
         }

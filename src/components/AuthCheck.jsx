@@ -36,7 +36,7 @@ const AuthCheck = ({ children }) => {
                 );
 
                 if (!authorized) {
-                    message.error(t('notAuthorized'));
+                    message.error(error.response?.data?.message || t('notAuthorized'));
                     navigate(group === 1 ? '/' : '/admin');
                     return;
                 }
@@ -44,7 +44,7 @@ const AuthCheck = ({ children }) => {
                 setAuthorized(true);
             } catch (error) {
                 console.error('Auth check failed:', error);
-                message.error(t('pleaseLoginFirst'));
+                message.error(error.response?.data?.message || t('pleaseLoginFirst'));
                 navigate(location.pathname.startsWith('/admin') ? '/admin/login' : '/login');
             } finally {
                 setLoading(false);

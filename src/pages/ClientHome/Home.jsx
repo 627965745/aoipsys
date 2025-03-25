@@ -84,7 +84,7 @@ const Home = () => {
                 setProducts(productData);
             }
         } catch (error) {
-            message.error(t("fetchResourcesError"));
+            message.error(error.response?.data?.message || t("fetchResourcesError"));
         }
     };
 
@@ -106,7 +106,7 @@ const Home = () => {
                 setTotal(response.data.data.total || 0);
             }
         } catch (error) {
-            message.error(t("fetchResourcesError"));
+            message.error(error.response?.data?.message || t("fetchResourcesError"));
         } finally {
             setLoading(false);
         }
