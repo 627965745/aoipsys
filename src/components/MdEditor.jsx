@@ -24,7 +24,7 @@ const MdEditor = ({ content, onChange }) => {
                     ['heading', 'bold', 'italic', 'strike'],
                     ['hr', 'quote'],
                     ['ul', 'ol', 'task'],
-                    ['table', 'link'],
+                    ['table', 'image', 'link'],
                     ['code', 'codeblock'],
                     ['scrollSync']
                 ]}

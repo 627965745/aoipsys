@@ -242,6 +242,8 @@ const resources = {
             firmware: "Firmware",
             other: "Other",
             processingFile: "Processing file...",
+            enterID: "Enter Language ID",
+            languageID: "Language ID",
             "error.21": "Authentication failed",
             "error.11": "Invalid field",
             "error.12": "Invalid field or session",
@@ -518,7 +520,9 @@ const resources = {
             "error.register.102": "密码长度不达标",
             "error.register.103": "该邮箱已被注册",
             unknownError: "发生未知错误",
-
+            copyUrl: "复制到剪贴板",
+            enterID: "输入语言ID",
+            languageID: "语言ID",
         },
     },
     es_ES: {
@@ -754,6 +758,8 @@ const resources = {
             firmware: "Firmware",
             other: "Otro",
             processingFile: "Procesando archivo...",
+            enterID: "Ingrese ID de idioma",
+            languageID: "ID de idioma",
             "error.21": "Autenticación fallida",
             "error.11": "Campo inválido",
             "error.12": "Campo o sesión inválidos",

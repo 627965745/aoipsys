@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input, Radio, Space, Select, Upload, message, Button, Modal, Form, Tabs, Progress } from "antd";
 import MdEditor from '../../components/MdEditor';
-import { InboxOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
+import { InboxOutlined, DeleteOutlined, LinkOutlined, CopyOutlined } from '@ant-design/icons';
 import { uploadFile } from '../../api/api';
 
 const { Dragger } = Upload;
@@ -226,6 +226,18 @@ const AddEditResource = ({
         setManualUrl('');
     };
 
+    const copyUrlToClipboard = () => {
+        const url = resource.url.startsWith('/') ? `${window.location.origin}${resource.url}` : resource.url;
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                message.success('链接已复制到剪贴板');
+            })
+            .catch(err => {
+                console.error('复制失败:', err);
+                message.error('复制失败，请手动复制');
+            });
+    };
+
     return (
         <Space direction="vertical" style={{ width: '100%' }}>
             <div style={{ display: 'flex', gap: '16px' }}>
@@ -377,13 +389,22 @@ const AddEditResource = ({
                                 {resource.url.startsWith('/') ? `${window.location.origin}${resource.url}` : resource.url}
                             </a>
                             {resource?.url && (
-                                <button 
-                                    onClick={handleDeleteUrl}
-                                    className="text-red-500 hover:text-red-700 underline ml-2"
-                                    type="button"
-                                >
-                                    {t('deleteUrl')}
-                                </button>
+                                <>
+                                    <button
+                                        onClick={copyUrlToClipboard}
+                                        className="text-blue-500 hover:text-blue-700 underline ml-2"
+                                        type="button"
+                                    >
+                                        复制到剪贴板
+                                    </button>
+                                    <button 
+                                        onClick={handleDeleteUrl}
+                                        className="text-red-500 hover:text-red-700 underline ml-2"
+                                        type="button"
+                                    >
+                                        {t('deleteUrl')}
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
