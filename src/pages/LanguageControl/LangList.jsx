@@ -3,7 +3,7 @@ import { Table, Button, Modal, message, Space, Input } from 'antd';
 import { PlusOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { getLanguageList, createLanguage, updateLanguage } from '../../api/api';
 import { useTranslation } from 'react-i18next';
-import AddEdit from './Addedit';
+import AddEdit from './AddEdit';
 
 const LangList = () => {
     const { t } = useTranslation();
@@ -69,13 +69,7 @@ const LangList = () => {
     };
 
     const handleCreate = async () => {
-        if (!newLanguage.name.trim()) {
-            message.error(t('languageNameRequired'));
-            return;
-        }
-
-        if (newLanguage.id === undefined) {
-            message.error('ID is required');
+        if (!setNewLanguage.validate()) {
             return;
         }
 
@@ -109,8 +103,7 @@ const LangList = () => {
     };
 
     const handleUpdate = async () => {
-        if (!editingLanguage.name.trim()) {
-            message.error(t('languageNameRequired'));
+        if (!setEditingLanguage.validate()) {
             return;
         }
 
@@ -137,6 +130,16 @@ const LangList = () => {
     const handleSearch = (value) => {
         setSearchQuery(value);
         fetchData(1, value);
+    };
+
+    const handleModalCancel = () => {
+        setIsModalVisible(false);
+        setNewLanguage.resetErrors?.();
+    };
+
+    const handleEditModalCancel = () => {
+        setEditModalVisible(false);
+        setEditingLanguage.resetErrors?.();
     };
 
     const columns = [
@@ -256,7 +259,7 @@ const LangList = () => {
                 title={t('addLanguage')}
                 open={isModalVisible}
                 onOk={handleCreate}
-                onCancel={() => setIsModalVisible(false)}
+                onCancel={handleModalCancel}
                 okText={t('confirm')}
                 cancelText={t('cancel')}
             >
@@ -272,7 +275,7 @@ const LangList = () => {
                 title={t('editLanguage')}
                 open={editModalVisible}
                 onOk={handleUpdate}
-                onCancel={() => setEditModalVisible(false)}
+                onCancel={handleEditModalCancel}
                 okText={t('confirm')}
                 cancelText={t('cancel')}
             >
