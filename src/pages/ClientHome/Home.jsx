@@ -23,8 +23,10 @@ import {
     AppstoreOutlined,
     CodeOutlined,
     EllipsisOutlined,
+    FilePdfOutlined,
 } from "@ant-design/icons";
 import MdViewer from "../../components/MdViewer";
+import html2pdf from 'html2pdf.js';
 
 const { Search } = Input;
 
@@ -43,6 +45,7 @@ const Home = () => {
     const [currentResource, setCurrentResource] = useState(null);
     const [originalData, setOriginalData] = useState([]);
     const [pageSize, setPageSize] = useState(10);
+    const [pdfLoading, setPdfLoading] = useState(false);
 
     // Fetch initial conditions
     useEffect(() => {
@@ -183,6 +186,36 @@ const Home = () => {
                 window.open(url, "_blank");
             },
         });
+    };
+
+    const handleConvertToPdf = async () => {
+        if (!currentResource?.resource_names?.resource_markdown) return;
+        
+        setPdfLoading(true);
+        try {
+            const element = document.getElementById('markdown-content');
+            const opt = {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `${currentResource.resource_names.resource_name}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 3,
+                },
+                jsPDF: { 
+                    unit: 'in', 
+                    format: 'a4', 
+                    orientation: 'portrait'
+                }
+            };
+
+            await html2pdf().set(opt).from(element).save();
+            message.success(t('pdfConversionSuccess'));
+        } catch (error) {
+            console.error('PDF conversion error:', error);
+            message.error(t('pdfConversionError'));
+        } finally {
+            setPdfLoading(false);
+        }
     };
 
     const columns = [
@@ -379,7 +412,7 @@ const Home = () => {
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                width={800}
+                width={1200}
             >
                 {currentResource?.url && (
                     <div className="mb-4">
@@ -397,7 +430,21 @@ const Home = () => {
                     </div>
                 )}
                 {currentResource?.resource_names?.resource_markdown && (
-                    <MdViewer content={currentResource.resource_names.resource_markdown} />
+                    <>
+                        <div className="flex justify-start">
+                            <Button
+                                type="primary"
+                                icon={<FilePdfOutlined />}
+                                onClick={handleConvertToPdf}
+                                loading={pdfLoading}
+                            >
+                                {t('convertToPdf')}
+                            </Button>
+                        </div>
+                        <div id="markdown-content">
+                            <MdViewer content={currentResource.resource_names.resource_markdown} />
+                        </div>
+                    </>
                 )}
             </Modal>
         </div>

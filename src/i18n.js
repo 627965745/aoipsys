@@ -263,6 +263,9 @@ const resources = {
             "error.register.101": "Registration attempts exceeded (3 times in 5 minutes)",
             "error.register.102": "Password length does not meet requirements",
             "error.register.103": "Email already registered",
+            convertToPdf: "Convert to PDF",
+            pdfConversionSuccess: "PDF converted successfully",
+            pdfConversionError: "Failed to convert to PDF",
         },
     },
     zh_CN: {
@@ -523,6 +526,9 @@ const resources = {
             copyUrl: "复制到剪贴板",
             enterID: "输入语言ID",
             languageID: "语言ID",
+            convertToPdf: "转换为PDF",
+            pdfConversionSuccess: "PDF转换成功",
+            pdfConversionError: "PDF转换失败",
         },
     },
     es_ES: {
@@ -780,8 +786,9 @@ const resources = {
             "error.register.102": "Contraseña no cumple con los requisitos",
             "error.register.103": "Correo electrónico ya registrado",
             unknownError: "Ocurrió un error desconocido",
-
-            
+            convertToPdf: "Convertir a PDF",
+            pdfConversionSuccess: "PDF convertido exitosamente",
+            pdfConversionError: "Error al convertir a PDF",
         },
     },
 };
