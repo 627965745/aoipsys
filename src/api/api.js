@@ -147,6 +147,9 @@ export const uploadFile = (formData, config) => {
         timeout: 120000
     });
 };
+export const requestPdf = (data) => {
+    return instance.post("/Client/Search/pdfGet", qs.stringify(data));
+};
 export const resetPassword = (data) => {
     return instance.post("/Common/User/reset", qs.stringify(data));
 };

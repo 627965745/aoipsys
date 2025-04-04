@@ -266,6 +266,7 @@ const resources = {
             downloadPdf: "Download as PDF",
             pdfDownloadSuccess: "PDF downloaded successfully",
             pdfDownloadError: "Failed to download PDF",
+            downloadPlainPdf: "Download as Plain Text PDF",
         },
     },
     zh_CN: {
@@ -529,6 +530,7 @@ const resources = {
             downloadPdf: "下载为PDF",
             pdfDownloadSuccess: "PDF下载成功",
             pdfDownloadError: "PDF下载失败",
+            downloadPlainPdf: "下载为纯文本PDF",
         },
     },
     es_ES: {
@@ -789,6 +791,7 @@ const resources = {
             downloadPdf: "Descargar como PDF",
             pdfDownloadSuccess: "PDF descargado exitosamente",
             pdfDownloadError: "Error al descargar PDF",
+            downloadPlainPdf: "Descargar como PDF de texto plano",
         },
     },
 };

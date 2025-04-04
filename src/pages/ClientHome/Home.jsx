@@ -11,7 +11,7 @@ import {
     Button,
 } from "antd";
 import { useTranslation } from "react-i18next";
-import { getResourceCondition, getResource } from "../../api/api";
+import { getResourceCondition, getResource, requestPdf } from "../../api/api";
 import { Link } from "react-router-dom";
 import {
     SearchOutlined,
@@ -27,6 +27,8 @@ import {
 } from "@ant-design/icons";
 import MdViewer from "../../components/MdViewer";
 import html2pdf from 'html2pdf.js';
+import axios from "axios";
+import qs from "qs";
 
 const { Search } = Input;
 
@@ -46,6 +48,7 @@ const Home = () => {
     const [originalData, setOriginalData] = useState([]);
     const [pageSize, setPageSize] = useState(10);
     const [pdfLoading, setPdfLoading] = useState(false);
+    const [plainPdfLoading, setPlainPdfLoading] = useState(false);
 
     // Fetch initial conditions
     useEffect(() => {
@@ -215,6 +218,54 @@ const Home = () => {
             message.error(t('pdfDownloadError'));
         } finally {
             setPdfLoading(false);
+        }
+    };
+
+    const handleResquestPdf = async () => {
+        if (!currentResource?.id) return;
+        
+        setPlainPdfLoading(true);
+        try {
+            // Create a direct axios instance to bypass the interceptors
+            const directAxios = axios.create({
+                baseURL: import.meta.env.VITE_API_BASE_URL,
+                timeout: 10000,
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                withCredentials: true,
+                responseType: 'blob'
+            });
+            
+            const response = await directAxios.post(
+                "/Client/Search/pdfGet", 
+                qs.stringify({
+                    id: currentResource.id,
+                    language: i18n.language
+                })
+            );
+            
+            // Response should be a blob directly
+            const blob = response.data;
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${currentResource.resource_names.resource_name}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+            message.success(t('pdfDownloadSuccess'));
+        } catch (error) {
+            console.error('PDF download error:', error);
+            message.error(t('pdfDownloadError'));
+        } finally {
+            setPlainPdfLoading(false);
         }
     };
 
@@ -437,8 +488,19 @@ const Home = () => {
                                 icon={<FilePdfOutlined />}
                                 onClick={handleConvertToPdf}
                                 loading={pdfLoading}
+                                disabled={pdfLoading || plainPdfLoading}
                             >
                                 {t('downloadPdf')}
+                            </Button>
+                            <Button
+                                type="primary"
+                                className="ml-2"
+                                icon={<FilePdfOutlined />}
+                                onClick={handleResquestPdf}
+                                loading={plainPdfLoading}
+                                disabled={pdfLoading || plainPdfLoading}
+                            >
+                                {t('downloadPlainPdf')}
                             </Button>
                         </div>
                         <div id="markdown-content">
