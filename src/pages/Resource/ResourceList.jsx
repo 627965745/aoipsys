@@ -13,6 +13,7 @@ const { TextArea } = Input;
 const ResourceList = () => {
     const { t } = useTranslation();
     const [data, setData] = useState([]);
+    const [loadingLanguages, setLoadingLanguages] = useState(false);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         current: 1,
@@ -32,7 +33,7 @@ const ResourceList = () => {
         type: 0,
         level: 0
     });
-    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);    
     const [editingResource, setEditingResource] = useState(null);
     const [products, setProducts] = useState([]);
     const [viewMarkdown, setViewMarkdown] = useState(false);
@@ -64,7 +65,7 @@ const ResourceList = () => {
     };
 
     const fetchLanguages = async () => {
-        setLoading(true);
+        setLoadingLanguages(true);
         try {
             const response = await getLanguageCombo();
             if (response.data.status === 0) {
@@ -73,7 +74,7 @@ const ResourceList = () => {
         } catch (error) {
             console.error("Error fetching languages:", error);
         } finally {
-            setLoading(false);
+            setLoadingLanguages(false);
         }
     };
 
@@ -423,7 +424,6 @@ const ResourceList = () => {
                     value={selectedKeys[0]}
                     onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                     onPressEnter={() => {
-                        confirm();
                         setNameFilter(selectedKeys[0]);
                         fetchData(1, selectedKeys[0], productFilter);
                     }}

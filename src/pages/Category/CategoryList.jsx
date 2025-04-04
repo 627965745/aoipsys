@@ -16,6 +16,7 @@ const CategoryList = () => {
     const { t, i18n } = useTranslation();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingLanguages, setLoadingLanguages] = useState(false);
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -66,7 +67,7 @@ const CategoryList = () => {
     }, []);
 
     const fetchLanguages = async () => {
-        setLoading(true);
+        setLoadingLanguages(true);
         try {
             const response = await getLanguageCombo();
             if (response.data.status === 0) {
@@ -76,7 +77,7 @@ const CategoryList = () => {
         } catch (error) {
             console.error("Error fetching languages:", error);
         } finally {
-            setLoading(false);
+            setLoadingLanguages(false);
         }
     };
 
@@ -226,7 +227,6 @@ const CategoryList = () => {
                             )
                         }
                         onPressEnter={() => {
-                            confirm();
                             setNameFilter(selectedKeys[0]);
                             fetchData(1, selectedKeys[0]);
                         }}
