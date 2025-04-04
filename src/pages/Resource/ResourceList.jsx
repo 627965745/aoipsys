@@ -699,21 +699,22 @@ const ResourceList = () => {
                 afterClose={() => setCurrentMarkdown({})}
                 destroyOnClose={true}
                 footer={null}
-                width={800}
+                width={1200}
             >
                 {Object.keys(currentMarkdown).length > 0 ? (
                     <Tabs
                         defaultActiveKey={Object.keys(currentMarkdown).find(key => 
                             currentMarkdown[key] && currentMarkdown[key].trim() !== ''
                         ) || Object.keys(currentMarkdown)[0]}
-                        items={Object.entries(currentMarkdown).map(([langId, content]) => {
-                            const language = languages.find(lang => lang.id === langId);
-                            return {
-                                key: langId,
-                                label: language ? language.name : langId,
-                                children: <MdViewer key={`${langId}-${content}`} content={content || ''} />
-                            };
-                        })}
+                        items={languages
+                            .map(language => {
+                                const content = currentMarkdown[language.id] || '';
+                                return {
+                                    key: language.id,
+                                    label: language.name,
+                                    children: <MdViewer key={`${language.id}-${content}`} content={content} />
+                                };
+                            })}
                     />
                 ) : (
                     <div className="text-center py-4 text-gray-500">{t('noMarkdownContent')}</div>
