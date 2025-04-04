@@ -22,7 +22,7 @@ const UserList = () => {
         name: "",
         email: "",
         level: 0,
-        group: 0,
+        group: undefined,
         enabled: 1,
         company: "",
         position: "",
@@ -75,7 +75,7 @@ const UserList = () => {
             name: "",
             email: "",
             level: 0,
-            group: 0,
+            group: undefined,
             enabled: 1,
             company: "",
             position: "",
@@ -90,7 +90,7 @@ const UserList = () => {
             name: "",
             email: "",
             level: 0,
-            group: 0,
+            group: undefined,
             enabled: 1,
             company: "",
             position: "",
@@ -240,6 +240,15 @@ const UserList = () => {
                 key: 'group',
                 width: '20%',
                 align: 'center',
+                render: (group) => {
+                    const groupOptions = [
+                        { value: 1, label: t('normalUser') },
+                        { value: 2, label: t('admin') },
+                        { value: 3, label: `${t('normalUser')} + ${t('admin')}` }
+                    ];
+                    const option = groupOptions.find(opt => opt.value === group);
+                    return option ? option.label : group;
+                }
             },
             {
                 title: t('lastLogin'),

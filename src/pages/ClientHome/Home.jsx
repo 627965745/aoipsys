@@ -209,10 +209,10 @@ const Home = () => {
             };
 
             await html2pdf().set(opt).from(element).save();
-            message.success(t('pdfConversionSuccess'));
+            message.success(t('pdfDownloadSuccess'));
         } catch (error) {
-            console.error('PDF conversion error:', error);
-            message.error(t('pdfConversionError'));
+            console.error('PDF download error:', error);
+            message.error(t('pdfDownloadError'));
         } finally {
             setPdfLoading(false);
         }
@@ -438,7 +438,7 @@ const Home = () => {
                                 onClick={handleConvertToPdf}
                                 loading={pdfLoading}
                             >
-                                {t('convertToPdf')}
+                                {t('downloadPdf')}
                             </Button>
                         </div>
                         <div id="markdown-content">

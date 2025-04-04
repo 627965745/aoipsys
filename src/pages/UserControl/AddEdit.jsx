@@ -13,7 +13,7 @@ const AddEditUser = ({
     const groupOptions = [
         { value: 1, label: t('normalUser') },
         { value: 2, label: t('admin') },
-        { value: 3, label: t('superAdmin') }
+        { value: 3, label: `${t('normalUser')} + ${t('admin')}` }
     ];
 
     return (
