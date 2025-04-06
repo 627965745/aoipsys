@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import GroupError from './GroupError';
+import i18n from '../i18n';
 
 const PUBLIC_PATHS = ['/login', '/admin/login', '/register'];
 const LOGIN_PATHS = ['/login', '/admin/login'];
@@ -14,6 +15,11 @@ export const ProtectedRoute = ({ children, requiredGroups = [] }) => {
     const { t } = useTranslation();
 
     useEffect(() => {
+        // Set language based on path before showing any messages
+        if (location.pathname.startsWith('/admin')) {
+            i18n.changeLanguage('zh_CN');
+        }
+
         if (!PUBLIC_PATHS.includes(location.pathname) && !user) {
             message.error(t('pleaseLoginFirst'));
         }
@@ -21,7 +27,18 @@ export const ProtectedRoute = ({ children, requiredGroups = [] }) => {
 
     // Redirect logged-in users trying to access login pages
     if (user && LOGIN_PATHS.includes(location.pathname)) {
-        return <Navigate to={user.group === 1 ? '/' : '/admin'} replace />;
+        if (user.group === 1) {
+            return <Navigate to="/" replace />;
+        } else if (user.group === 2) {
+            return <Navigate to="/admin" replace />;
+        } else if (user.group === 3) {
+            // For group 3, redirect based on which login page they're on
+            if (location.pathname === '/login') {
+                return <Navigate to="/" replace />;
+            } else if (location.pathname === '/admin/login') {
+                return <Navigate to="/admin" replace />;
+            }
+        }
     }
 
     // Allow public paths for non-logged-in users

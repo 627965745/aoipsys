@@ -18,13 +18,13 @@ const resources = {
             logoutFailed: "Logout failed",
             logoutError: "Logout error occurred",
             email: "Email",
-            emailError: "Please input your email!",
+            emailError: "Please enter your email.",
             emailPlaceholder: "Enter your email",
             password: "Password",
-            passwordError: "Please input your password!",
+            passwordError: "Please enter your password.",
             passwordPlaceholder: "Enter your password",
             captcha: "Captcha",
-            captchaError: "Please input the captcha!",
+            captchaError: "Please enter the captcha.",
             captchaPlaceholder: "Enter the captcha",
             loginSuccess: "Login successful",
             loginFailed: "Login failed",
@@ -37,10 +37,10 @@ const resources = {
             emailValidationFailed: "Failed to send code",
             enterEmailFirst: "Please enter your email first",
             confirmPassword: "Confirm Password",
-            confirmPasswordError: "Please confirm your password!",
-            passwordsNotMatch: "Passwords do not match!",
+            confirmPasswordError: "Please confirm your password.",
+            passwordsNotMatch: "Passwords do not match.",
             verificationCode: "Verification Code",
-            verificationCodeError: "Please input verification code!",
+            verificationCodeError: "Please enter verification code.",
             getCode: "Get Code",
             passwordLengthError:
                 "Password must be between 8 and 32 characters!",
@@ -804,11 +804,17 @@ i18n
         resources,
         fallbackLng: "en_GB",
         detection: {
-            order: ['navigator', 'htmlTag', 'path', 'subdomain'],
+            order: ['path', 'navigator', 'htmlTag', 'subdomain'],
             caches: ['cookie'],
             lookupFromPathIndex: 0,
             convertDetectedLanguage: (lng) => {
                 return lng.replace('-', '_');
+            },
+            checkPath: (path) => {
+                if (path.startsWith('/admin')) {
+                    return 'zh_CN';
+                }
+                return null;
             }
         },
         interpolation: {
