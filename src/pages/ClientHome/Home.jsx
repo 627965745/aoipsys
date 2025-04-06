@@ -95,13 +95,13 @@ const Home = () => {
     };
 
     // Fetch resources with complete object info
-    const fetchResources = async (page = 1, query = searchQuery) => {
+    const fetchResources = async (page, rows,query = searchQuery) => {
         setLoading(true);
         try {
             const params = {
                 query,
                 page,
-                rows: pageSize,
+                rows,
                 product: selectedProduct?.id || "",
                 category: selectedCategory?.id || "",
                 language: i18n.language,
@@ -119,18 +119,19 @@ const Home = () => {
     };
 
     useEffect(() => {
-        fetchResources(1);
+        fetchResources(1, pageSize);
     }, [selectedProduct, selectedCategory]);
 
     const handleSearch = (value) => {
         setSearchQuery(value);
         setCurrentPage(1);
-        fetchResources(1, value);
+        fetchResources(1, pageSize, value);
     };
 
     const handleTableChange = (pagination) => {
         setCurrentPage(pagination.current);
-        fetchResources(pagination.current);
+        setPageSize(pagination.pageSize);
+        fetchResources(pagination.current, pagination.pageSize, searchQuery);
     };
 
     const typeConfig = {
@@ -448,14 +449,9 @@ const Home = () => {
                             total,
                         }),
                     onChange: (page, newPageSize) => {
-                        setCurrentPage(page);
-                        if (newPageSize !== pageSize) {
-                            setPageSize(newPageSize);
-                        }
-                        fetchResources(page);
+                        handleTableChange({ current: page, pageSize: newPageSize });
                     },
                 }}
-                onChange={handleTableChange}
             />
 
             <Modal

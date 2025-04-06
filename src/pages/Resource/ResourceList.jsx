@@ -40,7 +40,6 @@ const ResourceList = () => {
     const [currentMarkdown, setCurrentMarkdown] = useState({});
     const [searchParams, setSearchParams] = useSearchParams();
     const [currentProductName, setCurrentProductName] = useState("");
-    const [pageSize, setPageSize] = useState(10);
     const [languages, setLanguages] = useState([]);
 
     const typeOptions = [
@@ -78,12 +77,12 @@ const ResourceList = () => {
         }
     };
 
-    const fetchData = async (page = 1, query = "", product = "") => {
+    const fetchData = async (page, rows, query, product) => {
         setLoading(true);
         try {
             const response = await getResourceList({
                 page,
-                rows: pageSize,
+                rows,
                 query,
                 product,
             });
@@ -92,7 +91,6 @@ const ResourceList = () => {
                 setData(response.data.data.rows);
                 setPagination(prev => ({
                     ...prev,
-                    current: page,
                     total: response.data.data.total,
                 }));
             } else {
@@ -122,10 +120,10 @@ const ResourceList = () => {
                         if (matchingProduct) {
                             setCurrentProductName(matchingProduct.name);
                             setProductFilter(productFromUrl);
-                            fetchData(1, "", productFromUrl);
+                            fetchData(pagination.current, pagination.pageSize, "", productFromUrl);
                         }
                     } else {
-                        fetchData(1, "", "");
+                        fetchData(pagination.current, pagination.pageSize, "", "");
                     }
                 }
             } catch (error) {
@@ -204,7 +202,7 @@ const ResourceList = () => {
             if (response.data.status === 0) {
                 message.success(response.data.message || t('resourceCreateSuccess'));
                 setIsModalVisible(false);
-                fetchData(1, nameFilter, productFilter);
+                fetchData(1, pagination.pageSize, nameFilter, productFilter);
             } else {
                 message.error(error.response?.data?.message || t('resourceCreateError'));
             }
@@ -218,45 +216,36 @@ const ResourceList = () => {
         const namesObj = {};
         const markdownsObj = {};
         
-        // Initialize empty markdowns for all available languages
         languages.forEach(lang => {
             markdownsObj[lang.id] = '';
         });
         
-        // Handle the case where names is an object with language keys
         if (record.names && typeof record.names === 'object' && !Array.isArray(record.names)) {
-            // Names is already in the correct format with language keys and string values
             Object.entries(record.names).forEach(([language, value]) => {
-                // If value is a string, use it directly
                 if (typeof value === 'string') {
                     namesObj[language] = value;
                 } 
-                // If value is an object with resource_name, extract it
                 else if (value && value.resource_name) {
                     namesObj[language] = value.resource_name;
                 }
             });
         } 
-        // Handle the case where names is an array of {language, value} objects
         else if (record.names && Array.isArray(record.names)) {
             record.names.forEach(item => {
                 namesObj[item.language] = item.value;
             });
         }
         
-        // Handle markdowns field if it exists as an object
         if (record.markdowns && typeof record.markdowns === 'object' && !Array.isArray(record.markdowns)) {
             Object.entries(record.markdowns).forEach(([language, value]) => {
                 markdownsObj[language] = value;
             });
         }
-        // Handle markdowns field if it exists as an array
         else if (record.markdowns && Array.isArray(record.markdowns)) {
             record.markdowns.forEach(item => {
                 markdownsObj[item.language] = item.value;
             });
         }
-        // Extract markdowns from names object if they exist there (for backward compatibility)
         else if (record.names && typeof record.names === 'object' && !Array.isArray(record.names)) {
             Object.entries(record.names).forEach(([language, data]) => {
                 if (data && data.resource_markdown) {
@@ -315,7 +304,7 @@ const ResourceList = () => {
             if (response.data.status === 0) {
                 message.success(response.data.message || t('resourceUpdateSuccess'));
                 setEditModalVisible(false);
-                fetchData(pagination.current, nameFilter, productFilter);
+                fetchData(pagination.current, pagination.pageSize, nameFilter, productFilter);
             } else {
                 message.error(error.response?.data?.message || t('resourceUpdateError'));
             }
@@ -331,7 +320,6 @@ const ResourceList = () => {
     };
 
     const handleMarkdownPreview = (record) => {
-        // First check if record has markdowns field
         if (record.markdowns && typeof record.markdowns === 'object') {
             const hasContent = Object.values(record.markdowns).some(content => 
                 content && content.trim() !== ''
@@ -344,13 +332,10 @@ const ResourceList = () => {
             }
         }
         
-        // Fallback to check if record has names with markdown content (for backward compatibility)
         if (record.names && typeof record.names === 'object') {
-            // Set the first non-empty markdown as default
             const markdownsByLanguage = {};
             let hasContent = false;
             
-            // Extract all markdowns by language
             Object.entries(record.names).forEach(([langId, data]) => {
                 if (data && data.resource_markdown) {
                     markdownsByLanguage[langId] = data.resource_markdown;
@@ -370,11 +355,20 @@ const ResourceList = () => {
         setViewMarkdown(true);
     };
 
+    const handleTableChange = (page, newPageSize) => {
+        setPagination(prev => ({
+            ...prev,
+            current: page,
+            pageSize: newPageSize,
+        }));
+        fetchData(page, newPageSize, nameFilter, productFilter);
+    }
+
     const handleClearFilter = () => {
         setProductFilter("");
         setCurrentProductName("");
         setSearchParams({});
-        fetchData(1, nameFilter, "");
+        fetchData(pagination.current, pagination.pageSize, nameFilter, "");
     };
 
     // Create a separate component for the resource name cell
@@ -425,16 +419,15 @@ const ResourceList = () => {
                     onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                     onPressEnter={() => {
                         setNameFilter(selectedKeys[0]);
-                        fetchData(1, selectedKeys[0], productFilter);
+                        fetchData(pagination.current, pagination.pageSize, selectedKeys[0], productFilter);
                     }}
                     style={{ width: 188, marginBottom: 8, display: 'block' }}
                 />
                 <Button
                     type="primary"
                     onClick={() => {
-                        confirm();
                         setNameFilter(selectedKeys[0]);
-                        fetchData(1, selectedKeys[0], productFilter);
+                        fetchData(pagination.current, pagination.pageSize, selectedKeys[0], productFilter);
                     }}
                     size="small"
                     style={{ width: 90, marginRight: 8 }}
@@ -445,7 +438,7 @@ const ResourceList = () => {
                     onClick={() => {
                         clearFilters();
                         setNameFilter("");
-                        fetchData(1, "", productFilter);
+                        fetchData(pagination.current, pagination.pageSize, "", productFilter);
                     }}
                     size="small"
                     style={{ width: 90 }}
@@ -616,7 +609,7 @@ const ResourceList = () => {
                     onChange={(value) => {
                         setProductFilter(value);
                         setSearchParams(value ? { product: value } : {});
-                        fetchData(1, nameFilter, value);
+                        fetchData(pagination.current, pagination.pageSize, nameFilter, value);
                     }}
                     allowClear
                     style={{ width: 200 }}
@@ -632,20 +625,14 @@ const ResourceList = () => {
                 pagination={{
                     total: pagination.total,
                     current: pagination.current,
-                    pageSize: pageSize,
+                    pageSize: pagination.pageSize,
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
                     onChange: (page, newPageSize) => {
-                        setPagination(prev => ({
-                            ...prev,
-                            current: page,
-                        }));
-                        if (newPageSize !== pageSize) {
-                            setPageSize(newPageSize);
-                        }
-                        fetchData(page, nameFilter, productFilter);
+                        handleTableChange(page, newPageSize);
                     },
+                
                 }}
                 loading={loading}
                 rowKey="id"

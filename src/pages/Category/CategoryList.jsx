@@ -31,15 +31,14 @@ const CategoryList = () => {
     });
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
-    const [pageSize, setPageSize] = useState(10);
     const [languages, setLanguages] = useState();
 
-    const fetchData = async (page = 1, query = "") => {
+    const fetchData = async (page, rows, query) => {
         setLoading(true);
         try {
             const response = await getCategoryList({
                 page,
-                rows: pageSize,
+                rows,
                 query,
             });
 
@@ -47,7 +46,6 @@ const CategoryList = () => {
                 setData(response.data.data.rows);
                 setPagination(prev => ({
                     ...prev,
-                    current: page,
                     total: response.data.data.total,
                 }));
             } else {
@@ -62,7 +60,7 @@ const CategoryList = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        fetchData(pagination.current, pagination.pageSize,"");
         fetchLanguages();
     }, []);
 
@@ -115,7 +113,7 @@ const CategoryList = () => {
                     enabled: 1,
                 });
                 setIsModalVisible(false);
-                fetchData(1, nameFilter);
+                fetchData(1, pagination.pageSize, nameFilter);
             } else {
                 message.error(error.response?.data?.message || t("categoryCreateError"));
             }
@@ -158,7 +156,7 @@ const CategoryList = () => {
                 message.success(t("categoryUpdateSuccess"));
                 setEditingCategory(null);
                 setEditModalVisible(false);
-                fetchData(pagination.current, nameFilter);
+                fetchData(pagination.current, pagination.pageSize, nameFilter);
             } else {
                 message.error(error.response?.data?.message || t("categoryUpdateError"));
             }
@@ -167,6 +165,15 @@ const CategoryList = () => {
             message.error(error.response?.data?.message || t("categoryUpdateError"));
         }
     };
+
+    const handleTableChange = (page, newPageSize) => {
+        setPagination(prev => ({
+            ...prev,
+            current: page,
+            pageSize: newPageSize,
+        }));
+        fetchData(page, newPageSize, nameFilter);
+    }
 
     // Create a separate component for the category name cell
     const CategoryNameCell = ({ record, languages }) => {
@@ -228,7 +235,7 @@ const CategoryList = () => {
                         }
                         onPressEnter={() => {
                             setNameFilter(selectedKeys[0]);
-                            fetchData(1, selectedKeys[0]);
+                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0]);
                         }}
                         style={{
                             width: 188,
@@ -239,9 +246,8 @@ const CategoryList = () => {
                     <Button
                         type="primary"
                         onClick={() => {
-                            confirm();
                             setNameFilter(selectedKeys[0]);
-                            fetchData(1, selectedKeys[0]);
+                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0]);
                         }}
                         size="small"
                         style={{ width: 90, marginRight: 8 }}
@@ -252,7 +258,7 @@ const CategoryList = () => {
                         onClick={() => {
                             clearFilters();
                             setNameFilter("");
-                            fetchData(1, "");
+                            fetchData(pagination.current, pagination.pageSize, "");
                         }}
                         size="small"
                         style={{ width: 90 }}
@@ -309,9 +315,6 @@ const CategoryList = () => {
         },
     ];
 
-    const handleTableChange = (newPagination, filters, sorter) => {
-        fetchData(newPagination.current, nameFilter);
-    };
 
     return (
         <div className="flex flex-col mb-4">
@@ -333,19 +336,12 @@ const CategoryList = () => {
                 pagination={{
                     total: pagination.total,
                     current: pagination.current,
-                    pageSize: pageSize,
+                    pageSize: pagination.pageSize,
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
                     onChange: (page, newPageSize) => {
-                        setPagination(prev => ({
-                            ...prev,
-                            current: page,
-                        }));
-                        if (newPageSize !== pageSize) {
-                            setPageSize(newPageSize);
-                        }
-                        fetchData(page, nameFilter);
+                        handleTableChange(page, newPageSize);
                     },
                 }}
                 loading={loading}

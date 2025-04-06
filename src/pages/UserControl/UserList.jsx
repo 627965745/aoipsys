@@ -16,7 +16,6 @@ const UserList = () => {
         pageSize: 10,
         total: 0,
     });
-    const [pageSize, setPageSize] = useState(10);
 
     const [newUser, setNewUser] = useState({
         name: "",
@@ -38,22 +37,21 @@ const UserList = () => {
     const [successModalVisible, setSuccessModalVisible] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
-    const fetchData = async (page = 1, query = searchQuery) => {
+    const fetchData = async (page, rows, query) => {
         setLoading(true);
         try {
             const response = await getUserList({
                 query,
                 page,
-                rows: pageSize
+                rows
             });
 
             if (response.data.status === 0) {
                 setData(response.data.data.rows);
-                setPagination({
-                    ...pagination,
-                    current: page,
+                setPagination(prev => ({
+                    ...prev,
                     total: response.data.data.total,
-                });
+                }));
             } else {
                 message.error(t('fetchUsersError'));
             }
@@ -66,7 +64,7 @@ const UserList = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        fetchData(pagination.current, pagination.pageSize, searchQuery);
     }, []);
 
     const handleAdd = () => {
@@ -127,7 +125,7 @@ const UserList = () => {
                 setSuccessMessage(response.data.message || t('userCreateSuccess'));
                 setSuccessModalVisible(true);
                 setIsModalVisible(false);
-                fetchData(1);
+                fetchData(1, pagination.pageSize, searchQuery);
             } else {
                 message.error(t('userCreateError'));
             }
@@ -185,7 +183,7 @@ const UserList = () => {
             if (response.data.status === 0) {
                 message.success(t('userUpdateSuccess'));
                 setEditModalVisible(false);
-                fetchData(pagination.current);
+                fetchData(pagination.current, pagination.pageSize, searchQuery);
             } else {
                 message.error(t('userUpdateError'));
             }
@@ -195,9 +193,15 @@ const UserList = () => {
         }
     };
 
-    const handleTableChange = (newPagination) => {
-        fetchData(newPagination.current);
-    };
+
+    const handleTableChange = (page, newPageSize) => {
+        setPagination(prev => ({
+            ...prev,
+            current: page,
+            pageSize: newPageSize,
+        }));
+        fetchData(page, newPageSize, searchQuery);
+    }
 
     const handleResetPassword = async () => {
         try {
@@ -221,7 +225,7 @@ const UserList = () => {
 
     const handleSearch = (value) => {
         setSearchQuery(value);
-        fetchData(1, value);
+        fetchData(pagination.current, pagination.pageSize, value);
     };
 
     // Define expandable row content
@@ -403,11 +407,6 @@ const UserList = () => {
                     allowClear
                     onSearch={handleSearch}
                     style={{ width: 300 }}
-                    onChange={(e) => {
-                        if (!e.target.value) {
-                            handleSearch("");
-                        }
-                    }}
                 />
             </div>
             <Table 
@@ -416,19 +415,12 @@ const UserList = () => {
                 pagination={{
                     total: pagination.total,
                     current: pagination.current,
-                    pageSize: pageSize,
+                    pageSize: pagination.pageSize,
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
                     onChange: (page, newPageSize) => {
-                        setPagination(prev => ({
-                            ...prev,
-                            current: page,
-                        }));
-                        if (newPageSize !== pageSize) {
-                            setPageSize(newPageSize);
-                        }
-                        fetchData(page, searchQuery);
+                        handleTableChange(page, newPageSize);
                     },
                 }}
                 expandable={{

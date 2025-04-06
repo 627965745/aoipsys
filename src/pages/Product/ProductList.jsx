@@ -53,7 +53,6 @@ const ProductList = () => {
     const [languages, setLanguages] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const [currentCategoryName, setCurrentCategoryName] = useState("");
-    const [pageSize, setPageSize] = useState(10);
 
     const fetchCategories = async () => {
         try {
@@ -84,12 +83,12 @@ const ProductList = () => {
         }
     };
 
-    const fetchData = async (page = 1, query = "", category = "") => {
+    const fetchData = async (page, rows, query, category) => {
         setLoading(true);
         try {
             const response = await getProductList({
                 page,
-                rows: pageSize,
+                rows,
                 query,
                 category,
             });
@@ -98,7 +97,6 @@ const ProductList = () => {
                 setData(response.data.data.rows);
                 setPagination(prev => ({
                     ...prev,
-                    current: page,
                     total: response.data.data.total,
                 }));
             } else {
@@ -125,9 +123,9 @@ const ProductList = () => {
 
                     if (categoryFromUrl) {
                         setCategoryFilter(categoryFromUrl);
-                        fetchData(1, "", categoryFromUrl);
+                        fetchData(pagination.current, pagination.pageSize, "", categoryFromUrl);
                     } else {
-                        fetchData(1, "", "");
+                        fetchData(pagination.current, pagination.pageSize, "", "");
                     }
                 }
             } catch (error) {
@@ -192,7 +190,7 @@ const ProductList = () => {
                     enabled: 1,
                 });
                 setIsModalVisible(false);
-                fetchData(1, nameFilter, categoryFilter);
+                fetchData(1, pagination.pageSize, "", categoryFilter);
             } else {
                 message.error(error.response?.data?.message || t("productCreateError"));
             }
@@ -235,7 +233,7 @@ const ProductList = () => {
             if (response.data.status === 0) {
                 message.success(t("productUpdateSuccess"));
                 setEditModalVisible(false);
-                fetchData(pagination.current, nameFilter, categoryFilter);
+                fetchData(pagination.current, pagination.pageSize, nameFilter, categoryFilter);
             } else {
                 message.error(error.response?.data?.message || t("productUpdateError")); 
             }
@@ -245,11 +243,21 @@ const ProductList = () => {
         }
     };
 
+
+    const handleTableChange = (page, newPageSize) => {
+        setPagination(prev => ({
+            ...prev,
+            current: page,
+            pageSize: newPageSize,
+        }));
+        fetchData(page, newPageSize, nameFilter, categoryFilter);
+    }
+
     const handleClearFilter = () => {
         setCategoryFilter("");
         setCurrentCategoryName("");
         setSearchParams({});
-        fetchData(1, nameFilter, "");
+        fetchData(pagination.current, pagination.pageSize, nameFilter, "");
     };
 
     const ProductNameCell = ({ record, languages }) => {
@@ -311,7 +319,7 @@ const ProductList = () => {
                         }
                         onPressEnter={() => {
                             setNameFilter(selectedKeys[0]);
-                            fetchData(1, selectedKeys[0], categoryFilter);
+                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
                         }}
                         style={{
                             width: 188,
@@ -322,9 +330,8 @@ const ProductList = () => {
                     <Button
                         type="primary"
                         onClick={() => {
-                            confirm();
                             setNameFilter(selectedKeys[0]);
-                            fetchData(1, selectedKeys[0], categoryFilter);
+                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
                         }}
                         size="small"
                         style={{ width: 90, marginRight: 8 }}
@@ -335,7 +342,7 @@ const ProductList = () => {
                         onClick={() => {
                             clearFilters();
                             setNameFilter("");
-                            fetchData(1, "", categoryFilter);
+                            fetchData(pagination.current, pagination.pageSize, "", categoryFilter);
                         }}
                         size="small"
                         style={{ width: 90 }}
@@ -397,19 +404,16 @@ const ProductList = () => {
         },
     ];
 
-    const handleTableChange = (newPagination, filters, sorter) => {
-        fetchData(newPagination.current, nameFilter, categoryFilter);
-    };
 
     const handleSearch = (selectedKeys, confirm) => {
         confirm();
         setNameFilter(selectedKeys[0]);
-        fetchData(1, selectedKeys[0], categoryFilter);
+        fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
     };
 
     const handleCategoryFilter = (value) => {
         setCategoryFilter(value);
-        fetchData(1, nameFilter, value);
+        fetchData(pagination.current, pagination.pageSize, nameFilter, value);
     };
 
     return (
@@ -447,7 +451,7 @@ const ProductList = () => {
                     onChange={(value) => {
                         setCategoryFilter(value);
                         setSearchParams(value ? { category: value } : {});
-                        fetchData(1, nameFilter, value);
+                        fetchData(pagination.current, pagination.pageSize, nameFilter, value);
                     }}
                     allowClear
                     style={{ width: 200 }}
@@ -463,19 +467,12 @@ const ProductList = () => {
                 pagination={{
                     total: pagination.total,
                     current: pagination.current,
-                    pageSize: pageSize,
+                    pageSize: pagination.pageSize,
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
                     onChange: (page, newPageSize) => {
-                        setPagination(prev => ({
-                            ...prev,
-                            current: page,
-                        }));
-                        if (newPageSize !== pageSize) {
-                            setPageSize(newPageSize);
-                        }
-                        fetchData(page, nameFilter, categoryFilter);
+                        handleTableChange(page, newPageSize);
                     },
                 }}
                 loading={loading}
