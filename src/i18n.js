@@ -268,6 +268,8 @@ const resources = {
             pdfDownloadSuccess: "PDF downloaded successfully",
             pdfDownloadError: "Failed to download PDF",
             downloadPlainPdf: "Download as Plain Text PDF",
+            currentlyUnavailable: "Currently unavailable",
+            notAvailableInYourLanguage: "Not yet available in English",
         },
     },
     zh_CN: {
@@ -532,6 +534,8 @@ const resources = {
             pdfDownloadSuccess: "PDF下载成功",
             pdfDownloadError: "PDF下载失败",
             downloadPlainPdf: "下载为纯文本PDF",
+            currentlyUnavailable: "暂无",
+            notAvailableInYourLanguage: "暂不支持中文",
         },
     },
     es_ES: {
@@ -793,6 +797,8 @@ const resources = {
             pdfDownloadSuccess: "PDF descargado exitosamente",
             pdfDownloadError: "Error al descargar PDF",
             downloadPlainPdf: "Descargar como PDF de texto plano",
+            currentlyUnavailable: "Actualmente no disponible",
+            notAvailableInYourLanguage: "No disponible en español",
         },
     },
 };

@@ -52,7 +52,7 @@ const Home = () => {
 
     // Fetch initial conditions
     useEffect(() => {
-        fetchResources(1);
+        fetchResources(1, pageSize);
         fetchConditions();
     }, [i18n.language]);
     const fetchConditions = async () => {
@@ -305,11 +305,24 @@ const Home = () => {
             title: t("action"),
             key: "action",
             width: 100,
-            render: (_, record) => (
-                <Button type="link" onClick={() => handleResourceClick(record)}>
-                    {t("view")}
-                </Button>
-            ),
+            render: (_, record) => {
+                const hasUrl = record.url && record.url.trim() !== "";
+                const hasMarkdown = record.resource_names?.resource_markdown && record.resource_names.resource_markdown.trim() !== "";
+                
+                if (!hasUrl && !hasMarkdown) {
+                    return (
+                        <Tooltip title={t("notAvailableInYourLanguage")}>
+                            <Button type="link" disabled className="text-gray-500">{t("currentlyUnavailable")}</Button>
+                        </Tooltip>
+                    );
+                }
+                
+                return (
+                    <Button type="link" onClick={() => handleResourceClick(record)}>
+                        {t("view")}
+                    </Button>
+                );
+            },
         },
     ];
 
