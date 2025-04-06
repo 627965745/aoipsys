@@ -808,8 +808,17 @@ i18n
             caches: ['cookie'],
             lookupFromPathIndex: 0,
             convertDetectedLanguage: (lng) => {
-                return lng.replace('-', '_');
-            },
+                // Convert hyphens to underscores
+                const normalizedLang = lng.replace('-', '_');
+                
+                // Check if the language exists in our resources
+                if (resources[normalizedLang]) {
+                    return normalizedLang;
+                }
+                
+                // If not found, return fallback language
+                return "en_GB";
+            }
         },
         interpolation: {
             escapeValue: false,
