@@ -15,6 +15,7 @@ const AdminAppLayout = () => {
     const location = useLocation();
     const { user, checkAuthStatus } = useAuth();
     const [languages, setLanguages] = useState([]);
+    const [languageName, setLanguageName] = useState(null);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
@@ -30,14 +31,29 @@ const AdminAppLayout = () => {
     }, [location.pathname]);
 
     useEffect(() => {
+        i18n.changeLanguage('zh_CN');
         fetchLanguages();
     }, []);
+
+    useEffect(() => {
+        if (languages.length > 0) {
+            const currentLanguage = languages.find(lang => lang.id === i18n.language);
+            setLanguageName(currentLanguage?.name);
+        }
+    }, [i18n.language, languages]);
 
     const fetchLanguages = async () => {
         try {
             const response = await getLanguageCombo();
             if (response.data.status === 0) {
                 setLanguages(response.data.data);
+                let currentLanguage = response.data.data.find(lang => lang.id === 'zh_CN');
+                
+                if (!currentLanguage && response.data.data.length > 0) {
+                    currentLanguage = response.data.data[0];
+                }
+                
+                setLanguageName(currentLanguage?.name);
             }
         } catch (error) {
             console.error("Error fetching languages:", error);
@@ -46,6 +62,8 @@ const AdminAppLayout = () => {
 
     const handleLanguageChange = (value) => {
         i18n.changeLanguage(value);
+        const selectedLanguage = languages.find(lang => lang.id === value);
+        setLanguageName(selectedLanguage?.name);
     };
 
     const handleLogout = async () => {
@@ -160,17 +178,20 @@ const AdminAppLayout = () => {
                     ]}
                 />
                 <Space>
-                <Select
-                        defaultValue={i18n.language}
-                        onChange={handleLanguageChange}
-                        className="w-[150px]"
+                    <div className="mr-2">
+                        <Select
+                            value={languageName}
+                            className="w-[120px]"
+                            onChange={handleLanguageChange}
+                            notFoundContent={null}
                     >
-                        {languages.map(lang => (
+                        {languages.map((lang) => (
                             <Select.Option key={lang.id} value={lang.id}>
                                 {lang.name}
                             </Select.Option>
                         ))}
                     </Select>
+                </div>
                     {user ? (
                         <Dropdown menu={userMenu} placement="bottomRight">
                             <Button 

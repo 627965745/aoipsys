@@ -14,31 +14,54 @@ const ClientAppLayout = () => {
     const navigate = useNavigate();
     const { user, checkAuthStatus } = useAuth();
     const [languages, setLanguages] = useState([]);
+    const [languageName, setLanguageName] = useState(null);
     const [loadingLanguages, setLoadingLanguages] = useState(false);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
 
-    // Fetch available languages from API
     useEffect(() => {
-        const fetchLanguages = async () => {
-            setLoadingLanguages(true);
-            try {
-                const response = await getLanguageCombo();
-                if (response.data.status === 0) {
-                    setLanguages(response.data.data);
-                } else {
-                    console.error("Failed to fetch languages");
-                }
-            } catch (error) {
-                console.error("Error fetching languages:", error);
-            } finally {
-                setLoadingLanguages(false);
-            }
-        };
-
         fetchLanguages();
     }, []);
+
+    useEffect(() => {
+        if (languages.length > 0) {
+            const currentLanguage = languages.find(lang => lang.id === i18n.language);
+            setLanguageName(currentLanguage?.name);
+        }
+    }, [i18n.language, languages]);
+
+    const fetchLanguages = async () => {
+        setLoadingLanguages(true);
+        try {
+            const response = await getLanguageCombo();
+            if (response.data.status === 0) {
+                setLanguages(response.data.data);
+                
+                let currentLanguage = response.data.data.find(lang => lang.id === i18n.language);
+                if (!currentLanguage) {
+                    const languageCode = i18n.language.split('_')[0];
+                    currentLanguage = response.data.data.find(lang => lang.id.startsWith(languageCode));
+                }
+
+                if (!currentLanguage && response.data.data.length > 0) {
+                    currentLanguage = response.data.data[0];
+                    i18n.changeLanguage(currentLanguage.id);
+                }
+                setLanguageName(currentLanguage?.name);
+            }
+        } catch (error) {
+            console.error("Error fetching languages:", error);
+        } finally {
+            setLoadingLanguages(false);
+        }
+    };
+
+    const handleLanguageChange = (value) => {
+        i18n.changeLanguage(value);
+        const selectedLanguage = languages.find(lang => lang.id === value);
+        setLanguageName(selectedLanguage?.name);
+    };
 
     const getLanguageFlag = (langCode) => {
         const countryCode = langCode.slice(-2);
@@ -50,10 +73,6 @@ const ClientAppLayout = () => {
             .join('');
         
         return flagEmoji;
-    };
-
-    const handleLanguageChange = (value) => {
-        i18n.changeLanguage(value);
     };
 
     const handleLogout = async () => {
@@ -123,15 +142,16 @@ const ClientAppLayout = () => {
                     ]}
                 />
                 <Space>
-                <Select
-                        defaultValue={i18n.language}
+                    <Select
+                        value={languageName}
+                        className="w-[120px]"
                         onChange={handleLanguageChange}
-                        className="w-[150px]"
                         loading={loadingLanguages}
+                        notFoundContent={null}
                     >
-                        {languages.map(lang => (
+                        {languages.map((lang) => (
                             <Select.Option key={lang.id} value={lang.id}>
-                                <span style={{ marginRight: '8px' }}>{getLanguageFlag(lang.id)}</span>
+                                <span className="mr-2">{getLanguageFlag(lang.id)}</span>
                                 {lang.name}
                             </Select.Option>
                         ))}
