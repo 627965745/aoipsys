@@ -31,6 +31,7 @@ const AdminAppLayout = () => {
     }, [location.pathname]);
 
     useEffect(() => {
+        i18n.changeLanguage('zh_CN');
         fetchLanguages();
     }, []);
 

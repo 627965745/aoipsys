@@ -810,12 +810,6 @@ i18n
             convertDetectedLanguage: (lng) => {
                 return lng.replace('-', '_');
             },
-            checkPath: (path) => {
-                if (path.startsWith('/admin')) {
-                    return 'zh_CN';
-                }
-                return null;
-            }
         },
         interpolation: {
             escapeValue: false,

@@ -21,14 +21,12 @@ function App() {
         <Router>
             <AuthProvider>
                 <Routes>
-                    {/* Protected Reset Password Route - accessible by all logged in users */}
                     <Route path="/reset-password" element={
                         <ProtectedRoute requiredGroups={[1, 2, 3]}>
                             <ResetPassword />
                         </ProtectedRoute>
                     } />
                     
-                    {/* Admin routes */}
                     <Route path="/admin" element={
                         <ProtectedRoute requiredGroups={[2, 3]}>
                             <AdminAppLayout />
@@ -43,7 +41,6 @@ function App() {
                         <Route path="login" element={<AdminLoginPage />} />
                     </Route>
 
-                    {/* Client routes */}
                     <Route path="/" element={
                         <ProtectedRoute requiredGroups={[1, 3]}>
                             <ClientAppLayout />
