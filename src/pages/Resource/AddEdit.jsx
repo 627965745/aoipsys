@@ -352,6 +352,7 @@ const AddEditResource = ({
                         placeholder={t('accessLevel')}
                         value={resource?.level}
                         onChange={(e) => handleChange('level', parseInt(e.target.value) || 0)}
+                        min={0}
                     />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -483,6 +484,7 @@ const AddEditResource = ({
                                 <MdEditor
                                     content={resource?.markdowns?.[language.id] || ''}
                                     onChange={(markdown) => handleLanguageMarkdownChange(language.id, markdown)}
+                                    onCancel={() => setIsModalVisible(false)}
                                 />
                             )
                         })) || []

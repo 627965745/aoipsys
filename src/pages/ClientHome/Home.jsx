@@ -270,6 +270,12 @@ const Home = () => {
         }
     };
 
+    const getFileExtension = (url) => {
+        if (!url) return '';
+        const match = url.match(/\.([^./?#]+)(?:[?#]|$)/);
+        return match ? match[1].toUpperCase() : '';
+    };
+
     const columns = [
         {
             title: t("type"),
@@ -308,6 +314,8 @@ const Home = () => {
             render: (_, record) => {
                 const hasUrl = record.url && record.url.trim() !== "";
                 const hasMarkdown = record.resource_names?.resource_markdown && record.resource_names.resource_markdown.trim() !== "";
+                const isSoftwareOrFirmware = record.type === 1 || record.type === 2;
+                const fileType = getFileExtension(record.url);
                 
                 if (!hasUrl && !hasMarkdown) {
                     return (
@@ -318,9 +326,11 @@ const Home = () => {
                 }
                 
                 return (
-                    <Button type="link" onClick={() => handleResourceClick(record)}>
-                        {t("view")}
-                    </Button>
+                    <Tooltip title={fileType ? `${t("fileType")}: ${fileType}` : ''}>
+                        <Button type="link" onClick={() => handleResourceClick(record)}>
+                            {!hasMarkdown && isSoftwareOrFirmware ? t("download") : t("view")}
+                        </Button>
+                    </Tooltip>
                 );
             },
         },
@@ -472,24 +482,35 @@ const Home = () => {
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                width={1200}
+                width={1300}
             >
                 {currentResource?.url && (
                     <div className="mb-4">
                         <div className="flex items-center">
-                            <a 
-                                className="text-blue-500 hover:text-blue-700 mr-2"
-                                onClick={() => handleUrlClick(currentResource.url)}
-                            >
-                                {t('visitExternalLink')}
-                            </a>
+                            <Tooltip title={getFileExtension(currentResource.url) ? `${t("fileType")}: ${getFileExtension(currentResource.url)}` : ''}>
+                                {currentResource.type === 1 ? (
+                                    <Button 
+                                        type="primary"
+                                        onClick={() => handleUrlClick(currentResource.url)}
+                                    >
+                                        {t('download')}
+                                    </Button>
+                                ) : (
+                                    <a 
+                                        className="text-blue-500 hover:text-blue-700 mr-2"
+                                        onClick={() => handleUrlClick(currentResource.url)}
+                                    >
+                                        {t('visitExternalLink')}
+                                    </a>
+                                )}
+                            </Tooltip>
                         </div>
                         <div className="mt-2">
                             <p className="text-gray-500 break-all">{currentResource.url}</p>
                         </div>
                     </div>
                 )}
-                {currentResource?.resource_names?.resource_markdown && (
+                {currentResource?.resource_names?.resource_markdown && currentResource.type !== 1 && (
                     <>
                         <div className="flex justify-start">
                             <Button
@@ -516,6 +537,11 @@ const Home = () => {
                             <MdViewer content={currentResource.resource_names.resource_markdown} />
                         </div>
                     </>
+                )}
+                {currentResource?.resource_names?.resource_markdown && currentResource.type === 1 && (
+                    <div id="markdown-content">
+                        <MdViewer content={currentResource.resource_names.resource_markdown} />
+                    </div>
                 )}
             </Modal>
         </div>
