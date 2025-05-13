@@ -148,7 +148,7 @@ export const uploadFile = (formData, config) => {
     });
 };
 export const requestPdf = (data) => {
-    return instance.post("/Client/Search/pdfGet", qs.stringify(data));
+    return instance.post("/Client/Search/pdfGet", qs.stringify(data), { timeout: 0 });
 };
 export const resetPassword = (data) => {
     return instance.post("/Common/User/reset", qs.stringify(data));

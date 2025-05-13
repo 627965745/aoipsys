@@ -94,20 +94,11 @@ const Register = () => {
                             label={t("password")}
                             className="flex-1"
                             rules={[
-                                {
-                                    required: true,
-                                    message: t("passwordError"),
-                                },
-                                {
-                                    min: 8,
-                                    max: 32,
-                                    message: t("passwordLengthError"),
-                                },
+                                { required: true, message: t("passwordError") },
+                                { min: 8, max: 32, message: t("passwordLengthError") },
                             ]}
                         >
-                            <Input.Password
-                                placeholder={t("passwordPlaceholder")}
-                            />
+                            <Input.Password placeholder={t("passwordPlaceholder")} />
                         </Form.Item>
 
                         <Form.Item
@@ -116,28 +107,18 @@ const Register = () => {
                             className="flex-1"
                             dependencies={["password"]}
                             rules={[
-                                {
-                                    required: true,
-                                    message: t("confirmPasswordError"),
-                                },
+                                { required: true, message: t("confirmPasswordError") },
                                 ({ getFieldValue }) => ({
                                     validator(_, value) {
-                                        if (
-                                            !value ||
-                                            getFieldValue("password") === value
-                                        ) {
+                                        if (!value || getFieldValue("password") === value) {
                                             return Promise.resolve();
                                         }
-                                        return Promise.reject(
-                                            new Error(t("passwordsNotMatch"))
-                                        );
+                                        return Promise.reject(new Error(t("passwordsNotMatch")));
                                     },
                                 }),
                             ]}
                         >
-                            <Input.Password
-                                placeholder={t("confirmPasswordPlaceholder")}
-                            />
+                            <Input.Password placeholder={t("confirmPasswordPlaceholder")} />
                         </Form.Item>
                     </div>
 
@@ -146,6 +127,9 @@ const Register = () => {
                             name="name"
                             label={t("name")}
                             className="flex-1"
+                            rules={[
+                                { required: true, message: t("nameError") },
+                            ]}
                         >
                             <Input placeholder={t("namePlaceholder")} />
                         </Form.Item>
@@ -154,6 +138,9 @@ const Register = () => {
                             name="industry"
                             label={t("industry")}
                             className="flex-1"
+                            rules={[
+                                { required: true, message: t("industryError") },
+                            ]}
                         >
                             <Input placeholder={t("industryPlaceholder")} />
                         </Form.Item>
@@ -164,6 +151,9 @@ const Register = () => {
                             name="company"
                             label={t("company")}
                             className="flex-1"
+                            rules={[
+                                { required: true, message: t("companyError") },
+                            ]}
                         >
                             <Input placeholder={t("companyPlaceholder")} />
                         </Form.Item>
@@ -172,12 +162,21 @@ const Register = () => {
                             name="position"
                             label={t("position")}
                             className="flex-1"
+                            rules={[
+                                { required: true, message: t("positionError") },
+                            ]}
                         >
                             <Input placeholder={t("positionPlaceholder")} />
                         </Form.Item>
                     </div>
 
-                    <Form.Item name="contact" label={t("contact")}>
+                    <Form.Item
+                        name="contact"
+                        label={t("contact")}
+                        rules={[
+                            { required: true, message: t("contactError") },
+                        ]}
+                    >
                         <Input placeholder={t("contactPlaceholder")} />
                     </Form.Item>
 
