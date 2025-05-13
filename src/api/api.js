@@ -23,7 +23,7 @@ const getErrorMessage = (status, endpoint = '') => {
             }
             break;
         case '/Common/Login/register':
-            if ([101, 102, 103].includes(status)) {
+            if ([101, 102, 103, 104].includes(status)) {
                 return i18next.t(`error.register.${status}`);
             }
             break;
