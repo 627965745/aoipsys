@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Input, Radio, Space, Tabs, Button } from "antd";
+import { Input, Radio, Space, Tabs, Button, Checkbox } from "antd";
 import { useTranslation } from "react-i18next";
 
 const AddEdit = ({ category, onChange, languages }) => {
@@ -161,6 +161,17 @@ const AddEdit = ({ category, onChange, languages }) => {
                         }) || []
                     }
                 />
+            </div>
+            <div>
+                <div>{t("highlighted")}
+                <Checkbox  className="ml-2"
+                    checked={category.highlighted === 1}
+                    onChange={(e) =>
+                        onChange({ ...category, highlighted: e.target.checked ? 1 : 0 })
+                    }
+                >
+                    
+                </Checkbox></div>
             </div>
             <div>
                 <div className="mb-2">{t("status")}</div>

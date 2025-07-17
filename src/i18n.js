@@ -278,6 +278,9 @@ const resources = {
             companyError: "Please enter your company.",
             positionError: "Please enter your position.",
             contactError: "Please enter your contact information.",
+            pleaseChooseCategory: "Please choose a category...",
+            pleaseChooseProduct: "Please choose a product...",
+            highlighted: "Highlight on user",
         },
     },
     zh_CN: {
@@ -552,6 +555,10 @@ const resources = {
             companyError: "请输入公司",
             positionError: "请输入职位",
             contactError: "请输入联系方式",
+            pleaseChooseCategory: "请选择类别...",
+            pleaseChooseProduct: "请选择产品...",
+            noData: "暂无数据",
+            highlighted: "用户端高亮",
         },
     },
     es_ES: {
@@ -823,6 +830,10 @@ const resources = {
             companyError: "¡Por favor ingrese su empresa!",
             positionError: "¡Por favor ingrese su cargo!",
             contactError: "¡Por favor ingrese su información de contacto!",
+            pleaseChooseCategory: "Por favor seleccione una categoría",
+            pleaseChooseProduct: "Por favor seleccione un producto",
+            noData: "Sin datos",
+            highlighted: "Resaltar en el usuario",
         },
     },
 };

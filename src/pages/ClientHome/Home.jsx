@@ -49,10 +49,11 @@ const Home = () => {
     const [pageSize, setPageSize] = useState(10);
     const [pdfLoading, setPdfLoading] = useState(false);
     const [plainPdfLoading, setPlainPdfLoading] = useState(false);
+    const [pdfProgress, setPdfProgress] = useState(0);
+    const [plainPdfProgress, setPlainPdfProgress] = useState(0);
 
     // Fetch initial conditions
     useEffect(() => {
-        fetchResources(1, pageSize);
         fetchConditions();
     }, [i18n.language]);
     const fetchConditions = async () => {
@@ -68,6 +69,7 @@ const Home = () => {
                 const categoryData = nestedData.map((item) => ({
                     id: item.id,
                     name: item.name,
+                    highlighted: item.highlighted,
                 }));
 
                 // Extract all products (children items)
@@ -119,19 +121,30 @@ const Home = () => {
     };
 
     useEffect(() => {
-        fetchResources(1, pageSize);
+        if (selectedProduct) {
+            fetchResources(1, pageSize);
+        } else {
+            // Clear resources when no product is selected
+            setResources([]);
+            setTotal(0);
+            setCurrentPage(1);
+        }
     }, [selectedProduct, selectedCategory]);
 
     const handleSearch = (value) => {
         setSearchQuery(value);
         setCurrentPage(1);
-        fetchResources(1, pageSize, value);
+        if (selectedProduct) {
+            fetchResources(1, pageSize, value);
+        }
     };
 
     const handleTableChange = (pagination) => {
         setCurrentPage(pagination.current);
         setPageSize(pagination.pageSize);
-        fetchResources(pagination.current, pagination.pageSize, searchQuery);
+        if (selectedProduct) {
+            fetchResources(pagination.current, pagination.pageSize, searchQuery);
+        }
     };
 
     const typeConfig = {
@@ -174,28 +187,41 @@ const Home = () => {
         }
     };
 
-    const handleUrlClick = (url) => {
-        Modal.confirm({
-            title: t("confirmJump"),
-            icon: <ExclamationCircleOutlined />,
-            content: (
-                <div>
-                    <p>{t("jumpToExternalLink")}</p>
-                    <p className="text-gray-500 break-all mt-2">{url}</p>
-                </div>
-            ),
-            okText: t("confirm"),
-            cancelText: t("cancel"),
-            onOk() {
-                window.open(url, "_blank");
-            },
-        });
+    const handleUrlClick = (url, isDownload = false) => {
+        if (isDownload) {
+            // Direct download without opening new page
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = ''; // Let browser determine filename from URL
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            // Show confirmation for external links
+            Modal.confirm({
+                title: t("confirmJump"),
+                icon: <ExclamationCircleOutlined />,
+                content: (
+                    <div>
+                        <p>{t("jumpToExternalLink")}</p>
+                        <p className="text-gray-500 break-all mt-2">{url}</p>
+                    </div>
+                ),
+                okText: t("confirm"),
+                cancelText: t("cancel"),
+                onOk() {
+                    window.open(url, "_blank");
+                },
+            });
+        }
     };
 
     const handleConvertToPdf = async () => {
         if (!currentResource?.resource_names?.resource_markdown) return;
         
         setPdfLoading(true);
+        setPdfProgress(0);
+        
         try {
             const element = document.getElementById('markdown-content');
             const opt = {
@@ -212,13 +238,33 @@ const Home = () => {
                 }
             };
 
+            // Simulate progress for HTML to PDF conversion
+            const progressInterval = setInterval(() => {
+                setPdfProgress(prev => {
+                    if (prev >= 90) {
+                        clearInterval(progressInterval);
+                        return prev;
+                    }
+                    return prev + Math.random() * 20;
+                });
+            }, 200);
+
             await html2pdf().set(opt).from(element).save();
-            message.success(t('pdfDownloadSuccess'));
+            
+            clearInterval(progressInterval);
+            setPdfProgress(100);
+            
+            setTimeout(() => {
+                message.success(t('pdfDownloadSuccess'));
+            }, 500);
         } catch (error) {
             console.error('PDF download error:', error);
             message.error(t('pdfDownloadError'));
         } finally {
-            setPdfLoading(false);
+            setTimeout(() => {
+                setPdfLoading(false);
+                setPdfProgress(0);
+            }, 1000);
         }
     };
 
@@ -226,6 +272,8 @@ const Home = () => {
         if (!currentResource?.id) return;
         
         setPlainPdfLoading(true);
+        setPlainPdfProgress(0);
+        
         try {
             // Create a direct axios instance to bypass the interceptors
             const directAxios = axios.create({
@@ -243,7 +291,15 @@ const Home = () => {
                 qs.stringify({
                     id: currentResource.id,
                     language: i18n.language
-                })
+                }),
+                {
+                    onDownloadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            setPlainPdfProgress(progress);
+                        }
+                    }
+                }
             );
             
             // Response should be a blob directly
@@ -266,7 +322,10 @@ const Home = () => {
             console.error('PDF download error:', error);
             message.error(t('pdfDownloadError'));
         } finally {
-            setPlainPdfLoading(false);
+            setTimeout(() => {
+                setPlainPdfLoading(false);
+                setPlainPdfProgress(0);
+            }, 1000);
         }
     };
 
@@ -378,7 +437,7 @@ const Home = () => {
     ];
 
     const getFilteredProducts = () => {
-        if (!selectedCategory) return products;
+        if (!selectedCategory) return [];
 
         // Find the selected category in the original data
         const categoryData = originalData.find(
@@ -411,9 +470,20 @@ const Home = () => {
                                 key={category.id}
                                 className="cursor-pointer px-4 py-2 text-sm"
                                 color={
-                                    selectedCategory?.id === category.id
-                                        ? "blue"
-                                        : "default"
+                                    category.highlighted === 1 
+                                        ? undefined 
+                                        : (selectedCategory?.id === category.id ? "blue" : "default")
+                                }
+                                style={
+                                    category.highlighted === 1 
+                                        ? {
+                                            backgroundColor: selectedCategory?.id === category.id 
+                                                ? "#645D21" 
+                                                : "#B8BE14",
+                                            color: "white",
+                                            border: "none"
+                                        }
+                                        : {}
                                 }
                                 onClick={() => handleCategoryClick(category)}
                             >
@@ -425,20 +495,26 @@ const Home = () => {
                 <div className="mb-2 mt-6">
                     <h3 className="text-lg font-medium">{t("product")}:</h3>
                     <Space wrap className="mt-2">
-                        {getFilteredProducts().map((product) => (
-                            <Tag
-                                key={product.id}
-                                className="cursor-pointer px-4 py-2 text-sm"
-                                color={
-                                    selectedProduct?.id === product.id
-                                        ? "blue"
-                                        : "default"
-                                }
-                                onClick={() => handleProductClick(product)}
-                            >
-                                {product.name}
-                            </Tag>
-                        ))}
+                        {!selectedCategory ? (
+                            <div className="text-gray-500 italic py-2">
+                                {t("pleaseChooseCategory") || "Please choose a category"}
+                            </div>
+                        ) : (
+                            getFilteredProducts().map((product) => (
+                                <Tag
+                                    key={product.id}
+                                    className="cursor-pointer px-4 py-2 text-sm border-0"
+                                    color={
+                                        selectedProduct?.id === product.id
+                                            ? "blue"
+                                            : "default"
+                                    }                                   
+                                    onClick={() => handleProductClick(product)}
+                                >
+                                    {product.name}
+                                </Tag>
+                            ))
+                        )}
                     </Space>
                 </div>
             </div>
@@ -459,6 +535,11 @@ const Home = () => {
                 dataSource={resources}
                 rowKey="id"
                 loading={loading}
+                locale={{
+                    emptyText: !selectedProduct 
+                        ? (t("pleaseChooseProduct") || "Please choose a product to view resources")
+                        : (t("noData") || "No data")
+                }}
                 pagination={{
                     total,
                     current: currentPage,
@@ -491,14 +572,14 @@ const Home = () => {
                                 {currentResource.type === 1 ? (
                                     <Button 
                                         type="primary"
-                                        onClick={() => handleUrlClick(currentResource.url)}
+                                        onClick={() => handleUrlClick(currentResource.url, true)}
                                     >
                                         {t('download')}
                                     </Button>
                                 ) : (
                                     <a 
                                         className="text-blue-500 hover:text-blue-700 mr-2"
-                                        onClick={() => handleUrlClick(currentResource.url)}
+                                        onClick={() => handleUrlClick(currentResource.url, false)}
                                     >
                                         {t('visitExternalLink')}
                                     </a>
@@ -520,7 +601,7 @@ const Home = () => {
                                 loading={pdfLoading}
                                 disabled={pdfLoading || plainPdfLoading}
                             >
-                                {t('downloadPdf')}
+                                {pdfLoading ? `${Math.round(pdfProgress)}%` : t('downloadPdf')}
                             </Button>
                             <Button
                                 type="primary"
@@ -530,7 +611,7 @@ const Home = () => {
                                 loading={plainPdfLoading}
                                 disabled={pdfLoading || plainPdfLoading}
                             >
-                                {t('downloadPlainPdf')}
+                                {plainPdfLoading ? `${Math.round(plainPdfProgress)}%` : t('downloadPlainPdf')}
                             </Button>
                         </div>
                         <div id="markdown-content">

@@ -33,7 +33,7 @@ const getErrorMessage = (status, endpoint = '') => {
 
 const instance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: 10000,
+    timeout: 0,
     headers: {
         "Content-Type": "application/x-www-form-urlencoded",
     },

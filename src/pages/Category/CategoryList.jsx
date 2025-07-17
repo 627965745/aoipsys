@@ -28,6 +28,7 @@ const CategoryList = () => {
         name: "",
         names: {},
         enabled: 1,
+        highlighted: 0,
     });
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
@@ -85,6 +86,7 @@ const CategoryList = () => {
             name: "",
             names: {},
             enabled: 1,
+            highlighted: 0,
         });
     };
 
@@ -102,7 +104,8 @@ const CategoryList = () => {
             const response = await createCategory({
                 name: newCategory.name,
                 names: newCategory.names,
-                enabled: newCategory.enabled
+                enabled: newCategory.enabled,
+                highlighted: newCategory.highlighted
             });
 
             if (response.data.status === 0) {
@@ -111,6 +114,7 @@ const CategoryList = () => {
                     name: "",
                     names: {},
                     enabled: 1,
+                    highlighted: 0,
                 });
                 setIsModalVisible(false);
                 fetchData(1, pagination.pageSize, nameFilter);
@@ -129,6 +133,7 @@ const CategoryList = () => {
             name: record.name,
             names: record.names || {},  // Ensure names is initialized as an object
             enabled: record.enabled,
+            highlighted: record.highlighted || 0,
         });
         setEditModalVisible(true);
     };
@@ -149,7 +154,8 @@ const CategoryList = () => {
                 id: editingCategory.id,
                 name: editingCategory.name,
                 names: editingCategory.names,
-                enabled: editingCategory.enabled
+                enabled: editingCategory.enabled,
+                highlighted: editingCategory.highlighted
             });
 
             if (response.data.status === 0) {
@@ -272,22 +278,40 @@ const CategoryList = () => {
                     style={{ color: filtered ? "#1890ff" : undefined }}
                 />
             ),
-            width: "30%",
+            width: "25%",
         },
         {
             title: t("timeCreated"),
             dataIndex: "time_created",
-            width: "30%",
+            width: "20%",
         },
         {
             title: t("timeUpdated"),
             dataIndex: "time_updated",
-            width: "30%",
+            width: "20%",
+        },
+        {
+            title: t("highlighted"),
+            dataIndex: "highlighted",
+            width: "15%",
+            align: "center",
+            render: (highlighted) => (
+                <span
+                    style={{
+                        color: highlighted ? "#52c41a" : "#ff4d4f",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    {highlighted ? <CheckOutlined /> : <CloseOutlined />}
+                </span>
+            ),
         },
         {
             title: t("status"),
             dataIndex: "enabled",
-            width: "20%",
+            width: "15%",
             align: "center",
             render: (enabled) => (
                 <span
