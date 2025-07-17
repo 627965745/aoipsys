@@ -144,7 +144,7 @@ export const resetUserPassword = (data) => {
 export const uploadFile = (formData, config) => {
     return instance.post("/Admin/Upload/upload", formData, {
         ...config,
-        timeout: 120000
+        timeout: 240000
     });
 };
 export const requestPdf = (data) => {

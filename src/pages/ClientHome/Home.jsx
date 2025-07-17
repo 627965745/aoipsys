@@ -26,7 +26,6 @@ import {
     FilePdfOutlined,
 } from "@ant-design/icons";
 import MdViewer from "../../components/MdViewer";
-import html2pdf from 'html2pdf.js';
 import axios from "axios";
 import qs from "qs";
 
@@ -47,9 +46,7 @@ const Home = () => {
     const [currentResource, setCurrentResource] = useState(null);
     const [originalData, setOriginalData] = useState([]);
     const [pageSize, setPageSize] = useState(10);
-    const [pdfLoading, setPdfLoading] = useState(false);
     const [plainPdfLoading, setPlainPdfLoading] = useState(false);
-    const [pdfProgress, setPdfProgress] = useState(0);
     const [plainPdfProgress, setPlainPdfProgress] = useState(0);
 
     // Fetch initial conditions
@@ -216,99 +213,110 @@ const Home = () => {
         }
     };
 
-    const handleConvertToPdf = async () => {
-        if (!currentResource?.resource_names?.resource_markdown) return;
-        
-        setPdfLoading(true);
-        setPdfProgress(0);
-        
-        try {
-            const element = document.getElementById('markdown-content');
-            const opt = {
-                margin: [0.5, 0.5, 0.5, 0.5],
-                filename: `${currentResource.resource_names.resource_name}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 3,
-                },
-                jsPDF: { 
-                    unit: 'in', 
-                    format: 'a4', 
-                    orientation: 'portrait'
-                }
-            };
 
-            // Simulate progress for HTML to PDF conversion
-            const progressInterval = setInterval(() => {
-                setPdfProgress(prev => {
-                    if (prev >= 90) {
-                        clearInterval(progressInterval);
-                        return prev;
-                    }
-                    return prev + Math.random() * 20;
-                });
-            }, 200);
 
-            await html2pdf().set(opt).from(element).save();
-            
-            clearInterval(progressInterval);
-            setPdfProgress(100);
-            
-            setTimeout(() => {
-                message.success(t('pdfDownloadSuccess'));
-            }, 500);
-        } catch (error) {
-            console.error('PDF download error:', error);
-            message.error(t('pdfDownloadError'));
-        } finally {
-            setTimeout(() => {
-                setPdfLoading(false);
-                setPdfProgress(0);
-            }, 1000);
-        }
-    };
-
-    const handleResquestPdf = async () => {
+        const handleResquestPdf = async () => {
         if (!currentResource?.id) return;
         
         setPlainPdfLoading(true);
         setPlainPdfProgress(0);
         
+        let currentProgress = 0;
+        let targetProgress = 0;
+        let smoothingInterval = null;
+        let totalSize = 0;
+        
+        const smoothProgress = () => {
+            if (currentProgress < targetProgress) {
+                currentProgress = Math.min(targetProgress, currentProgress + 2);
+                setPlainPdfProgress(currentProgress);
+                
+                if (currentProgress < targetProgress) {
+                    smoothingInterval = requestAnimationFrame(smoothProgress);
+                } else {
+                    smoothingInterval = null;
+                }
+            }
+        };
+        
         try {
-            // Create a direct axios instance to bypass the interceptors
-            const directAxios = axios.create({
-                baseURL: import.meta.env.VITE_API_BASE_URL,
-                timeout: 10000,
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                withCredentials: true,
-                responseType: 'blob'
-            });
-            
-            const response = await directAxios.post(
-                "/Client/Search/pdfGet", 
-                qs.stringify({
-                    id: currentResource.id,
-                    language: i18n.language
-                }),
-                {
-                    onDownloadProgress: (progressEvent) => {
-                        if (progressEvent.total) {
-                            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                            setPlainPdfProgress(progress);
+            const response = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.open('POST', `${import.meta.env.VITE_API_BASE_URL}/Client/Search/pdfGet`);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.responseType = 'blob';
+                xhr.withCredentials = true;
+                
+                // Try to get content-length from response headers
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState >= 2 && !totalSize) { // Headers received
+                        const contentLength = xhr.getResponseHeader('content-length');
+                        if (contentLength) {
+                            totalSize = parseInt(contentLength, 10);
+                            console.log('Got content-length from headers:', totalSize);
                         }
                     }
-                }
-            );
+                };
+                
+                xhr.onprogress = (event) => {
+                    let percentCompleted;
+                    
+                    const total = event.total || totalSize;
+                    
+                    if (total > 0) {
+                        percentCompleted = Math.round((event.loaded * 100) / total);
+                        console.log('Progress:', percentCompleted + '%', `(${event.loaded}/${total} bytes)`);
+                    } else {
+                        const loadedKB = Math.round(event.loaded / 1024);
+                        percentCompleted = Math.min(85, Math.sqrt(loadedKB) * 8);
+                        console.log('Estimated progress:', percentCompleted + '%', `(${loadedKB}KB loaded, no total)`);
+                    }
+                    
+                    targetProgress = Math.round(percentCompleted);
+                    
+                    if (!smoothingInterval) {
+                        smoothProgress();
+                    }
+                };
+                
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        targetProgress = 100;
+                        if (!smoothingInterval) {
+                            smoothProgress();
+                        }
+                        
+                        const waitForCompletion = () => {
+                            if (currentProgress >= 100) {
+                                resolve({ data: xhr.response });
+                            } else {
+                                requestAnimationFrame(waitForCompletion);
+                            }
+                        };
+                        waitForCompletion();
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}`));
+                    }
+                };
+                
+                xhr.onerror = () => reject(new Error('Network error'));
+                
+                const formData = qs.stringify({
+                    id: currentResource.id,
+                    language: i18n.language
+                });
+                
+                xhr.send(formData);
+            });
             
-            // Response should be a blob directly
             const blob = response.data;
             const url = window.URL.createObjectURL(blob);
             
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${currentResource.resource_names.resource_name}.pdf`;
+            const dateString = formatDateForFilename(currentResource.time_updated);
+            link.download = `${currentResource.resource_names.resource_name}${dateString}.pdf`;
             document.body.appendChild(link);
             link.click();
             
@@ -321,7 +329,16 @@ const Home = () => {
         } catch (error) {
             console.error('PDF download error:', error);
             message.error(t('pdfDownloadError'));
+            // Clean up smoothing animation on error
+            if (smoothingInterval) {
+                cancelAnimationFrame(smoothingInterval);
+            }
         } finally {
+            // Clean up smoothing animation
+            if (smoothingInterval) {
+                cancelAnimationFrame(smoothingInterval);
+            }
+            
             setTimeout(() => {
                 setPlainPdfLoading(false);
                 setPlainPdfProgress(0);
@@ -333,6 +350,20 @@ const Home = () => {
         if (!url) return '';
         const match = url.match(/\.([^./?#]+)(?:[?#]|$)/);
         return match ? match[1].toUpperCase() : '';
+    };
+
+    const formatDateForFilename = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            const year = date.getFullYear().toString().slice(-2); // Get last 2 digits of year
+            const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+            const day = date.getDate().toString().padStart(2, '0');
+            return `_${year}${month}${day}`;
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return '';
+        }
     };
 
     const columns = [
@@ -597,21 +628,11 @@ const Home = () => {
                             <Button
                                 type="primary"
                                 icon={<FilePdfOutlined />}
-                                onClick={handleConvertToPdf}
-                                loading={pdfLoading}
-                                disabled={pdfLoading || plainPdfLoading}
-                            >
-                                {pdfLoading ? `${Math.round(pdfProgress)}%` : t('downloadPdf')}
-                            </Button>
-                            <Button
-                                type="primary"
-                                className="ml-2"
-                                icon={<FilePdfOutlined />}
                                 onClick={handleResquestPdf}
                                 loading={plainPdfLoading}
-                                disabled={pdfLoading || plainPdfLoading}
+                                disabled={plainPdfLoading}
                             >
-                                {plainPdfLoading ? `${Math.round(plainPdfProgress)}%` : t('downloadPlainPdf')}
+                                {plainPdfLoading ? `${Math.round(plainPdfProgress)}%` : t('downloadPdf')}
                             </Button>
                         </div>
                         <div id="markdown-content">
