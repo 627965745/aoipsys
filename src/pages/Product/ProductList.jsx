@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Table,
     Input,
@@ -53,6 +53,8 @@ const ProductList = () => {
     const [languages, setLanguages] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const [currentCategoryName, setCurrentCategoryName] = useState("");
+    const initialDataFetched = useRef(false);
+    const combosFetched = useRef(false);
 
     const fetchCategories = async () => {
         try {
@@ -110,31 +112,56 @@ const ProductList = () => {
         }
     };
 
+    // Initial data fetching on mount
     useEffect(() => {
-        const categoryFromUrl = searchParams.get("category");
-
-        const fetchInitialData = async () => {
-            try {
-                await fetchLanguages();
-                const categoriesResponse = await getCategoryDropdown();
-                if (categoriesResponse.data.status === 0) {
-                    const categoryData = categoriesResponse.data.data || [];
-                    setCategories(categoryData);
-
-                    if (categoryFromUrl) {
-                        setCategoryFilter(categoryFromUrl);
-                        fetchData(pagination.current, pagination.pageSize, "", categoryFromUrl);
-                    } else {
-                        fetchData(pagination.current, pagination.pageSize, "", "");
+        if (!combosFetched.current) {
+            combosFetched.current = true;
+            
+            const fetchInitialData = async () => {
+                try {
+                    await fetchLanguages();
+                    const categoriesResponse = await getCategoryDropdown();
+                    if (categoriesResponse.data.status === 0) {
+                        const categoryData = categoriesResponse.data.data || [];
+                        setCategories(categoryData);
                     }
+                } catch (error) {
+                    message.error(error.response?.data?.message || t("fetchCategoriesError"));
                 }
-            } catch (error) {
-                message.error(error.response?.data?.message || t("fetchCategoriesError"));
-            }
-        };
+            };
 
-        fetchInitialData();
-    }, [searchParams]);
+            fetchInitialData();
+        }
+    }, []); // Only run once on mount
+
+    // Handle category filter changes from URL - but only when categories are ready
+    useEffect(() => {
+        if (categories.length > 0) { // Only run after categories are loaded
+            const categoryFromUrl = searchParams.get("category");
+            
+            // For initial load with categories just loaded
+            if (!initialDataFetched.current) {
+                initialDataFetched.current = true;
+                if (categoryFromUrl) {
+                    setCategoryFilter(categoryFromUrl);
+                    fetchData(pagination.current, pagination.pageSize, "", categoryFromUrl);
+                } else {
+                    setCategoryFilter("");
+                    fetchData(pagination.current, pagination.pageSize, "", "");
+                }
+            } 
+            // For subsequent searchParams changes (dropdown selection, clear filter)
+            else {
+                if (categoryFromUrl) {
+                    setCategoryFilter(categoryFromUrl);
+                    fetchData(pagination.current, pagination.pageSize, "", categoryFromUrl);
+                } else {
+                    setCategoryFilter("");
+                    fetchData(pagination.current, pagination.pageSize, "", "");
+                }
+            }
+        }
+    }, [searchParams, categories]);
 
     useEffect(() => {
         if (categories.length > 0) {
@@ -146,9 +173,11 @@ const ProductList = () => {
                 if (matchingCategory) {
                     setCurrentCategoryName(matchingCategory.name);
                 }
+            } else {
+                setCurrentCategoryName("");
             }
         }
-    }, [categories]);
+    }, [categories, searchParams]);
 
     const handleAdd = () => {
         if (categories.length === 0) {
@@ -254,10 +283,7 @@ const ProductList = () => {
     }
 
     const handleClearFilter = () => {
-        setCategoryFilter("");
-        setCurrentCategoryName("");
         setSearchParams({});
-        fetchData(pagination.current, pagination.pageSize, nameFilter, "");
     };
 
     const ProductNameCell = ({ record, languages }) => {
@@ -449,9 +475,7 @@ const ProductList = () => {
                     placeholder={t("selectCategory")}
                     value={categoryFilter || undefined}
                     onChange={(value) => {
-                        setCategoryFilter(value);
                         setSearchParams(value ? { category: value } : {});
-                        fetchData(pagination.current, pagination.pageSize, nameFilter, value);
                     }}
                     allowClear
                     style={{ width: 200 }}

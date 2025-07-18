@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Table, Input, Button, message, Modal, Radio, Space, Select, Tooltip, Tabs } from "antd";
 import { useTranslation } from "react-i18next";
 import { getResourceList, createResource, updateResource, getProductDropdown, getLanguageCombo } from "../../api/api";
@@ -41,6 +41,8 @@ const ResourceList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [currentProductName, setCurrentProductName] = useState("");
     const [languages, setLanguages] = useState([]);
+    const initialDataFetched = useRef(false);
+    const combosFetched = useRef(false);
 
     const typeOptions = [
         { value: 0, label: t('document') },
@@ -104,35 +106,66 @@ const ResourceList = () => {
         }
     };
 
+    // Initial data fetching on mount
     useEffect(() => {
-        const productFromUrl = searchParams.get('product');
-        
-        const fetchInitialData = async () => {
-            try {
-                await fetchLanguages();
-                const productsResponse = await getProductDropdown();
-                if (productsResponse.data.status === 0) {
-                    const productData = productsResponse.data.data || [];
-                    setProducts(productData);
-                    
-                    if (productFromUrl) {
-                        const matchingProduct = productData.find(p => p.id === productFromUrl);
-                        if (matchingProduct) {
-                            setCurrentProductName(matchingProduct.name);
-                            setProductFilter(productFromUrl);
-                            fetchData(pagination.current, pagination.pageSize, "", productFromUrl);
-                        }
-                    } else {
-                        fetchData(pagination.current, pagination.pageSize, "", "");
+        if (!combosFetched.current) {
+            combosFetched.current = true;
+            
+            const fetchInitialData = async () => {
+                try {
+                    await fetchLanguages();
+                    const productsResponse = await getProductDropdown();
+                    if (productsResponse.data.status === 0) {
+                        const productData = productsResponse.data.data || [];
+                        setProducts(productData);
                     }
+                } catch (error) {
+                    message.error(error.response?.data?.message || t('fetchProductsError'));
                 }
-            } catch (error) {
-                message.error(error.response?.data?.message || t('fetchProductsError'));
-            }
-        };
+            };
 
-        fetchInitialData();
-    }, [searchParams]);
+            fetchInitialData();
+        }
+    }, []); // Only run once on mount
+
+    // Handle product filter changes from URL - but only when products are ready
+    useEffect(() => {
+        if (products.length > 0) { // Only run after products are loaded
+            const productFromUrl = searchParams.get('product');
+            
+            // For initial load with products just loaded
+            if (!initialDataFetched.current) {
+                initialDataFetched.current = true;
+                if (productFromUrl) {
+                    const matchingProduct = products.find(p => p.id === productFromUrl);
+                    if (matchingProduct) {
+                        setCurrentProductName(matchingProduct.name);
+                        setProductFilter(productFromUrl);
+                        fetchData(pagination.current, pagination.pageSize, "", productFromUrl);
+                    }
+                } else {
+                    setCurrentProductName("");
+                    setProductFilter("");
+                    fetchData(pagination.current, pagination.pageSize, "", "");
+                }
+            }
+            // For subsequent searchParams changes (dropdown selection, clear filter)  
+            else {
+                if (productFromUrl) {
+                    const matchingProduct = products.find(p => p.id === productFromUrl);
+                    if (matchingProduct) {
+                        setCurrentProductName(matchingProduct.name);
+                        setProductFilter(productFromUrl);
+                        fetchData(pagination.current, pagination.pageSize, "", productFromUrl);
+                    }
+                } else {
+                    setCurrentProductName("");
+                    setProductFilter("");
+                    fetchData(pagination.current, pagination.pageSize, "", "");
+                }
+            }
+        }
+    }, [searchParams, products]);
 
     const handleAdd = () => {
         if (products.length === 0) {
@@ -365,10 +398,7 @@ const ResourceList = () => {
     }
 
     const handleClearFilter = () => {
-        setProductFilter("");
-        setCurrentProductName("");
         setSearchParams({});
-        fetchData(pagination.current, pagination.pageSize, nameFilter, "");
     };
 
     // Create a separate component for the resource name cell
@@ -607,9 +637,7 @@ const ResourceList = () => {
                     placeholder={t("selectProduct")}
                     value={productFilter || undefined}
                     onChange={(value) => {
-                        setProductFilter(value);
                         setSearchParams(value ? { product: value } : {});
-                        fetchData(pagination.current, pagination.pageSize, nameFilter, value);
                     }}
                     allowClear
                     style={{ width: 200 }}

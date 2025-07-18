@@ -3,5 +3,5 @@ import ProductList from "./ProductList";
 
 export default function ProductPage() {
     const location = useLocation();
-    return <ProductList key={location.state?.refresh || 'default'} />;
+    return <ProductList key={location.state?.refresh || null} />;
 }

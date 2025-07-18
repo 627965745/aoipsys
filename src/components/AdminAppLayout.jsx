@@ -222,7 +222,7 @@ const AdminAppLayout = () => {
                     <div className="flex min-h-full">
                         {sidebarComponent}
                         <div className="flex-1">
-                            <Outlet key={selectedKey} />
+                            <Outlet key={location.state?.refresh || null} />
                         </div>
                     </div>
                 </Content>
