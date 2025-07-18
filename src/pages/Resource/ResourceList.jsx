@@ -444,12 +444,14 @@ const ResourceList = () => {
             filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                 <div style={{ padding: 8 }}>
                 <Input
+                    ref={(input) => input && setTimeout(() => input.focus(), 100)}
                     placeholder={t('searchResourcePlaceholder')}
                     value={selectedKeys[0]}
                     onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                     onPressEnter={() => {
                         setNameFilter(selectedKeys[0]);
                         fetchData(pagination.current, pagination.pageSize, selectedKeys[0], productFilter);
+                        confirm();
                     }}
                     style={{ width: 188, marginBottom: 8, display: 'block' }}
                 />
@@ -458,6 +460,7 @@ const ResourceList = () => {
                     onClick={() => {
                         setNameFilter(selectedKeys[0]);
                         fetchData(pagination.current, pagination.pageSize, selectedKeys[0], productFilter);
+                        confirm();
                     }}
                     size="small"
                     style={{ width: 90, marginRight: 8 }}
@@ -469,6 +472,7 @@ const ResourceList = () => {
                         clearFilters();
                         setNameFilter("");
                         fetchData(pagination.current, pagination.pageSize, "", productFilter);
+                        confirm();
                     }}
                     size="small"
                     style={{ width: 90 }}
@@ -478,7 +482,13 @@ const ResourceList = () => {
                 </div>
             ),
             filterIcon: (filtered) => (
-                <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+                <Button 
+                    size="small" 
+                    type={filtered ? 'primary' : 'default'}
+                    icon={<SearchOutlined />}
+                >
+                    {t('search')}
+                </Button>
             ),
             width: "15%",
             render: (text, record) => <ResourceNameCell record={record} languages={languages} />,
@@ -641,6 +651,10 @@ const ResourceList = () => {
                     }}
                     allowClear
                     style={{ width: 200 }}
+                    showSearch
+                    filterOption={(input, option) =>
+                        option?.label?.toLowerCase().includes(input.toLowerCase())
+                    }
                     options={products.map((product) => ({
                         value: product.id,
                         label: product.name,

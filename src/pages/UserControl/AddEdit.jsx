@@ -83,6 +83,10 @@ const AddEditUser = ({
                     value={user?.group}
                     onChange={(value) => handleChange('group', value)}
                     style={{ width: '100%' }}
+                    showSearch
+                    filterOption={(input, option) =>
+                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                    }
                 >
                     {groupOptions.map(option => (
                         <Select.Option key={option.value} value={option.value}>

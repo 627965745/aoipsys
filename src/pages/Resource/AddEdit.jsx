@@ -271,6 +271,10 @@ const AddEditResource = ({
                         }}
                         style={{ width: '100%' }}
                         status={errors.product ? "error" : ""}
+                        showSearch
+                        filterOption={(input, option) =>
+                            option?.children?.toLowerCase().includes(input.toLowerCase())
+                        }
                     >
                         {products.map(product => (
                             <Select.Option key={product.id} value={product.id}>
@@ -337,6 +341,10 @@ const AddEditResource = ({
                         value={resource?.type}
                         onChange={(value) => handleChange('type', value)}
                         style={{ width: '100%' }}
+                        showSearch
+                        filterOption={(input, option) =>
+                            option?.children?.toLowerCase().includes(input.toLowerCase())
+                        }
                     >
                         {typeOptions.map(option => (
                             <Select.Option key={option.value} value={option.value}>

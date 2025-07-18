@@ -123,6 +123,10 @@ const AddEdit = ({ product, onChange, languages, categories }) => {
                     }}
                     style={{ width: "100%" }}
                     status={errors.category ? "error" : ""}
+                    showSearch
+                    filterOption={(input, option) =>
+                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                    }
                 >
                     {categories.map((category) => (
                         <Select.Option key={category.id} value={category.id}>

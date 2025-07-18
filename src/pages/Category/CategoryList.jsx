@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Table, Input, Button, message, Modal, Radio, Space, Tabs } from "antd";
+import { Table, Input, Button, message, Modal, Radio, Space, Tabs, Tooltip } from "antd";
 import { Link, useNavigate } from "react-router-dom"; // Add this import
 import { useTranslation } from "react-i18next";
 import { getCategoryList, createCategory, updateCategory, getLanguageCombo } from "../../api/api";
@@ -188,12 +188,20 @@ const CategoryList = () => {
         return (
             <div>
                 <div className="flex items-center">
-                    <Link
-                        to={`/admin/product?category=${record.id}`}
-                        className="text-blue-600 hover:text-blue-800 mr-2"
-                    >
-                        {record.name}
-                    </Link>
+                    {record.enabled ? (
+                        <Link
+                            to={`/admin/product?category=${record.id}`}
+                            className="text-blue-600 hover:text-blue-800 mr-2"
+                        >
+                            {record.name}
+                        </Link>
+                    ) : (
+                        <Tooltip title={t("categoryNotEnabled")}>
+                            <span className="text-black-400 mr-2">
+                                {record.name}
+                            </span>
+                        </Tooltip>
+                    )}
                     <TranslationOutlined 
                         className="text-gray-400 cursor-pointer hover:text-blue-500"
                         onClick={(e) => {
@@ -232,6 +240,7 @@ const CategoryList = () => {
             }) => (
                 <div style={{ padding: 8 }}>
                     <Input
+                        ref={(input) => input && setTimeout(() => input.focus(), 100)}
                         placeholder={t("searchCategoryPlaceholder")}
                         value={selectedKeys[0]}
                         onChange={(e) =>
@@ -242,6 +251,7 @@ const CategoryList = () => {
                         onPressEnter={() => {
                             setNameFilter(selectedKeys[0]);
                             fetchData(pagination.current, pagination.pageSize, selectedKeys[0]);
+                            confirm();
                         }}
                         style={{
                             width: 188,
@@ -254,6 +264,7 @@ const CategoryList = () => {
                         onClick={() => {
                             setNameFilter(selectedKeys[0]);
                             fetchData(pagination.current, pagination.pageSize, selectedKeys[0]);
+                            confirm();
                         }}
                         size="small"
                         style={{ width: 90, marginRight: 8 }}
@@ -265,6 +276,7 @@ const CategoryList = () => {
                             clearFilters();
                             setNameFilter("");
                             fetchData(pagination.current, pagination.pageSize, "");
+                            confirm();
                         }}
                         size="small"
                         style={{ width: 90 }}
@@ -274,9 +286,13 @@ const CategoryList = () => {
                 </div>
             ),
             filterIcon: (filtered) => (
-                <SearchOutlined
-                    style={{ color: filtered ? "#1890ff" : undefined }}
-                />
+                <Button 
+                    size="small" 
+                    type={filtered ? 'primary' : 'default'}
+                    icon={<SearchOutlined />}
+                >
+                    {t('search')}
+                </Button>
             ),
             width: "25%",
         },

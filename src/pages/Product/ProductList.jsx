@@ -8,6 +8,7 @@ import {
     Radio,
     Space,
     Select,
+    Tooltip,
 } from "antd";
 import { useTranslation } from "react-i18next";
 import {
@@ -292,12 +293,20 @@ const ProductList = () => {
         return (
             <div>
                 <div className="flex items-center">
-                    <Link
-                        to={`/admin/resource?product=${record.id}`}
-                        className="text-blue-600 hover:text-blue-800 mr-2"
-                    >
-                        {record.name}
-                    </Link>
+                    {record.enabled ? (
+                        <Link
+                            to={`/admin/resource?product=${record.id}`}
+                            className="text-blue-600 hover:text-blue-800 mr-2"
+                        >
+                            {record.name}
+                        </Link>
+                    ) : (
+                        <Tooltip title={t("productNotEnabled")}>
+                            <span className="text-black-400 mr-2">
+                                {record.name}
+                            </span>
+                        </Tooltip>
+                    )}
                     <TranslationOutlined 
                         className="text-gray-400 cursor-pointer hover:text-blue-500"
                         onClick={(e) => {
@@ -336,6 +345,7 @@ const ProductList = () => {
             }) => (
                 <div style={{ padding: 8 }}>
                     <Input
+                        ref={(input) => input && setTimeout(() => input.focus(), 100)}
                         placeholder={t("searchProductPlaceholder")}
                         value={selectedKeys[0]}
                         onChange={(e) =>
@@ -346,6 +356,7 @@ const ProductList = () => {
                         onPressEnter={() => {
                             setNameFilter(selectedKeys[0]);
                             fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
+                            confirm();
                         }}
                         style={{
                             width: 188,
@@ -358,6 +369,7 @@ const ProductList = () => {
                         onClick={() => {
                             setNameFilter(selectedKeys[0]);
                             fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
+                            confirm();
                         }}
                         size="small"
                         style={{ width: 90, marginRight: 8 }}
@@ -369,6 +381,7 @@ const ProductList = () => {
                             clearFilters();
                             setNameFilter("");
                             fetchData(pagination.current, pagination.pageSize, "", categoryFilter);
+                            confirm();
                         }}
                         size="small"
                         style={{ width: 90 }}
@@ -378,9 +391,13 @@ const ProductList = () => {
                 </div>
             ),
             filterIcon: (filtered) => (
-                <SearchOutlined
-                    style={{ color: filtered ? "#1890ff" : undefined }}
-                />
+                <Button 
+                    size="small" 
+                    type={filtered ? 'primary' : 'default'}
+                    icon={<SearchOutlined />}
+                >
+                    {t('search')}
+                </Button>
             ),
             width: "20%",
         },
@@ -478,6 +495,10 @@ const ProductList = () => {
                         setSearchParams(value ? { category: value } : {});
                     }}
                     allowClear
+                    showSearch
+                    filterOption={(input, option) =>
+                        option?.label?.toLowerCase().includes(input.toLowerCase())
+                    }
                     style={{ width: 200 }}
                     options={categories.map((category) => ({
                         value: category.id,
