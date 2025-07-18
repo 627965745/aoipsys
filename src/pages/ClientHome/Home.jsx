@@ -120,8 +120,8 @@ const Home = () => {
     useEffect(() => {
         if (selectedProduct) {
             fetchResources(1, pageSize);
-        } else {
-            // Clear resources when no product is selected
+        } else if (!searchQuery) {
+            // Clear resources when no product is selected and no search query
             setResources([]);
             setTotal(0);
             setCurrentPage(1);
@@ -131,9 +131,14 @@ const Home = () => {
     const handleSearch = (value) => {
         setSearchQuery(value);
         setCurrentPage(1);
-        if (selectedProduct) {
-            fetchResources(1, pageSize, value);
+        // If search is cleared and no product selected, clear resources
+        if (!value && !selectedProduct) {
+            setResources([]);
+            setTotal(0);
+            return;
         }
+        // Allow searching regardless of product/category selection
+        fetchResources(1, pageSize, value);
     };
 
     const handleTableChange = (pagination) => {
@@ -567,9 +572,11 @@ const Home = () => {
                 rowKey="id"
                 loading={loading}
                 locale={{
-                    emptyText: !selectedProduct 
-                        ? (t("pleaseChooseProduct") || "Please choose a product to view resources")
-                        : (t("noData") || "No data")
+                    emptyText: searchQuery 
+                        ? (t("noSearchResults") || "No search results found")
+                        : !selectedProduct 
+                            ? (t("pleaseChooseProduct") || "Please choose a product to view resources")
+                            : (t("noData") || "No data")
                 }}
                 pagination={{
                     total,

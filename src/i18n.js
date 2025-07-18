@@ -283,6 +283,7 @@ const resources = {
             highlighted: "Highlight on user",
             categoryNotEnabled: "Category not enabled",
             productNotEnabled: "Product not enabled",
+            noSearchResults: "No search results found",
         },
     },
     zh_CN: {
@@ -563,6 +564,7 @@ const resources = {
             highlighted: "用户端高亮",
             categoryNotEnabled: "类别未启用",
             productNotEnabled: "产品未启用",
+            noSearchResults: "暂无搜索结果",
         },
     },
     es_ES: {
@@ -840,6 +842,7 @@ const resources = {
             highlighted: "Resaltar en el usuario",
             categoryNotEnabled: "Categoría no habilitada",
             productNotEnabled: "Producto no habilitado",
+            noSearchResults: "No se encontraron resultados de búsqueda",
         },
     },
 };
