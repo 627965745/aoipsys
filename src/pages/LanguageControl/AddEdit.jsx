@@ -10,13 +10,11 @@ const AddEdit = ({
     const [idError, setIdError] = useState('');
     const [nameError, setNameError] = useState('');
 
-    // Add reset function for errors
     const resetErrors = () => {
         setIdError('');
         setNameError('');
     };
 
-    // Expose reset function to parent
     onChange.resetErrors = resetErrors;
 
     const validateLanguageId = (value) => {
@@ -51,7 +49,6 @@ const AddEdit = ({
         onChange({ ...language, [field]: value });
     };
 
-    // Add validate method to be accessed by parent
     onChange.validate = () => {
         if (!isEditing) {
             const idValidationError = validateLanguageId(language?.id);

@@ -80,14 +80,14 @@ const ClientAppLayout = () => {
             const response = await logout();
             if (response.data.status === 0) {
                 message.success(t("logoutSuccess"));
-                await checkAuthStatus(); // Update auth context
+                await checkAuthStatus(); 
                 navigate("/login");
             } else {
                 message.error(error.response?.data?.message || t("logoutFailed"));
             }
         } catch (error) {
             message.error(error.response?.data?.message || t("logoutError"));
-            await checkAuthStatus(); // Update auth context
+            await checkAuthStatus(); 
             navigate("/login");
         }
     };

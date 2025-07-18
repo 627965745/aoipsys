@@ -16,7 +16,6 @@ const AuthCheck = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                // Skip check for public paths
                 if (publicPaths.includes(location.pathname)) {
                     setAuthorized(true);
                     setLoading(false);
@@ -55,7 +54,7 @@ const AuthCheck = ({ children }) => {
     }, [location.pathname]);
 
     if (loading) {
-        return null; // Or a loading spinner
+        return null; 
     }
 
     return authorized ? children : null;

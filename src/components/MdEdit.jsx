@@ -25,9 +25,7 @@ function MdEdit() {
     };
 
     const handleChange = () => {
-        // Get markdown content
         const markdown = editorRef.current?.getInstance().getMarkdown();
-        // Get HTML content
         const html = editorRef.current?.getInstance().getHTML();
 
         setMarkdownContent(markdown);

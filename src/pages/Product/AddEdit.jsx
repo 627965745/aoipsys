@@ -7,20 +7,16 @@ const AddEdit = ({ product, onChange, languages, categories }) => {
     const [activeTab, setActiveTab] = useState(null);
     const [errors, setErrors] = useState({});
 
-    // Create refs for input fields
     const inputRefs = useRef({});
 
-    // Initialize activeTab when component mounts or languages change
     useEffect(() => {
         if (languages?.length > 0) {
             if (!activeTab) setActiveTab(languages[0].id);
         }
     }, [languages]);
 
-    // Focus input when tab changes
     useEffect(() => {
         if (activeTab && inputRefs.current[activeTab]) {
-            // Use setTimeout to ensure the tab has fully rendered
             setTimeout(() => {
                 inputRefs.current[activeTab]?.focus();
             }, 100);
@@ -30,17 +26,14 @@ const AddEdit = ({ product, onChange, languages, categories }) => {
     const validateInputs = () => {
         const newErrors = {};
 
-        // Check display name
         if (!product?.name || product.name.trim() === "") {
             newErrors.displayName = t("productDisplayNameRequired");
         }
 
-        // Check category
         if (!product?.category) {
             newErrors.category = t("categoryRequired");
         }
 
-        // Check all enabled language inputs
         const emptyLanguages = languages
             .filter(
                 (lang) =>
@@ -50,7 +43,6 @@ const AddEdit = ({ product, onChange, languages, categories }) => {
 
         if (emptyLanguages?.length > 0) {
             newErrors.languages = emptyLanguages.map((lang) => lang.id);
-            // Set active tab to first empty language
             setActiveTab(emptyLanguages[0].id);
         }
 
@@ -58,7 +50,6 @@ const AddEdit = ({ product, onChange, languages, categories }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Make validate method available to parent
     useEffect(() => {
         if (typeof onChange === "function") {
             onChange.validate = validateInputs;
@@ -74,7 +65,6 @@ const AddEdit = ({ product, onChange, languages, categories }) => {
             newNames[langId] = value.trim();
         }
 
-        // Clear error for this language when user types
         if (errors.languages) {
             setErrors((prev) => ({
                 ...prev,

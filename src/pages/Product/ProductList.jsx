@@ -113,7 +113,6 @@ const ProductList = () => {
         }
     };
 
-    // Initial data fetching on mount
     useEffect(() => {
         if (!combosFetched.current) {
             combosFetched.current = true;
@@ -133,14 +132,12 @@ const ProductList = () => {
 
             fetchInitialData();
         }
-    }, []); // Only run once on mount
+    }, []);
 
-    // Handle category filter changes from URL - but only when categories are ready
     useEffect(() => {
-        if (categories.length > 0) { // Only run after categories are loaded
+        if (categories.length > 0) {
             const categoryFromUrl = searchParams.get("category");
             
-            // For initial load with categories just loaded
             if (!initialDataFetched.current) {
                 initialDataFetched.current = true;
                 if (categoryFromUrl) {
@@ -151,7 +148,6 @@ const ProductList = () => {
                     fetchData(pagination.current, pagination.pageSize, "", "");
                 }
             } 
-            // For subsequent searchParams changes (dropdown selection, clear filter)
             else {
                 if (categoryFromUrl) {
                     setCategoryFilter(categoryFromUrl);

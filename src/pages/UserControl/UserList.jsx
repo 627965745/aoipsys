@@ -228,7 +228,6 @@ const UserList = () => {
         fetchData(pagination.current, pagination.pageSize, value);
     };
 
-    // Define expandable row content
     const expandedRowRender = (record) => {
         const detailColumns = [
             {

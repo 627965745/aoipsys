@@ -14,7 +14,6 @@ const MdEditor = ({ content, onChange, onCancel }) => {
             closeButton.style.display = isFullscreen ? 'none' : 'block';
         }
 
-        // Cleanup function to ensure the close button is visible when component unmounts
         return () => {
             if (closeButton) {
                 closeButton.style.display = 'block';
@@ -22,7 +21,6 @@ const MdEditor = ({ content, onChange, onCancel }) => {
         };
     }, [isFullscreen]);
 
-    // Reset fullscreen state when modal is closed
     useEffect(() => {
         if (onCancel) {
             const originalOnCancel = onCancel;

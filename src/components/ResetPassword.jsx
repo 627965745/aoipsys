@@ -17,7 +17,6 @@ const ResetPassword = () => {
     const [loading, setLoading] = useState(false);
     const { checkAuthStatus } = useAuth();
 
-    // Get source from URL parameters
     const searchParams = new URLSearchParams(location.search);
     
     const source = searchParams.get("source") || "client";

@@ -49,7 +49,6 @@ const Home = () => {
     const [plainPdfLoading, setPlainPdfLoading] = useState(false);
     const [plainPdfProgress, setPlainPdfProgress] = useState(0);
 
-    // Fetch initial conditions
     useEffect(() => {
         fetchConditions();
     }, [i18n.language]);
@@ -62,17 +61,14 @@ const Home = () => {
                 const nestedData = response.data.data || [];
                 setOriginalData(nestedData);
 
-                // Extract categories (parent items)
                 const categoryData = nestedData.map((item) => ({
                     id: item.id,
                     name: item.name,
                     highlighted: item.highlighted,
                 }));
 
-                // Extract all products (children items)
                 const productData = nestedData.reduce((acc, category) => {
                     if (category.children) {
-                        // Convert object to array of products
                         const products = Object.entries(
                             category.children
                         ).map(([id, name]) => ({
@@ -93,7 +89,6 @@ const Home = () => {
         }
     };
 
-    // Fetch resources with complete object info
     const fetchResources = async (page, rows,query = searchQuery) => {
         setLoading(true);
         try {
@@ -121,7 +116,6 @@ const Home = () => {
         if (selectedProduct) {
             fetchResources(1, pageSize);
         } else if (!searchQuery) {
-            // Clear resources when no product is selected and no search query
             setResources([]);
             setTotal(0);
             setCurrentPage(1);
@@ -131,13 +125,11 @@ const Home = () => {
     const handleSearch = (value) => {
         setSearchQuery(value);
         setCurrentPage(1);
-        // If search is cleared and no product selected, clear resources
         if (!value && !selectedProduct) {
             setResources([]);
             setTotal(0);
             return;
         }
-        // Allow searching regardless of product/category selection
         fetchResources(1, pageSize, value);
     };
 
@@ -191,15 +183,13 @@ const Home = () => {
 
     const handleUrlClick = (url, isDownload = false) => {
         if (isDownload) {
-            // Direct download without opening new page
             const link = document.createElement('a');
             link.href = url;
-            link.download = ''; // Let browser determine filename from URL
+            link.download = '';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         } else {
-            // Show confirmation for external links
             Modal.confirm({
                 title: t("confirmJump"),
                 icon: <ExclamationCircleOutlined />,
@@ -253,13 +243,11 @@ const Home = () => {
                 xhr.responseType = 'blob';
                 xhr.withCredentials = true;
                 
-                // Try to get content-length from response headers
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState >= 2 && !totalSize) { // Headers received
                         const contentLength = xhr.getResponseHeader('content-length');
                         if (contentLength) {
                             totalSize = parseInt(contentLength, 10);
-                            console.log('Got content-length from headers:', totalSize);
                         }
                     }
                 };
@@ -271,11 +259,9 @@ const Home = () => {
                     
                     if (total > 0) {
                         percentCompleted = Math.round((event.loaded * 100) / total);
-                        console.log('Progress:', percentCompleted + '%', `(${event.loaded}/${total} bytes)`);
                     } else {
                         const loadedKB = Math.round(event.loaded / 1024);
                         percentCompleted = Math.min(85, Math.sqrt(loadedKB) * 8);
-                        console.log('Estimated progress:', percentCompleted + '%', `(${loadedKB}KB loaded, no total)`);
                     }
                     
                     targetProgress = Math.round(percentCompleted);
@@ -334,12 +320,10 @@ const Home = () => {
         } catch (error) {
             console.error('PDF download error:', error);
             message.error(t('pdfDownloadError'));
-            // Clean up smoothing animation on error
             if (smoothingInterval) {
                 cancelAnimationFrame(smoothingInterval);
             }
         } finally {
-            // Clean up smoothing animation
             if (smoothingInterval) {
                 cancelAnimationFrame(smoothingInterval);
             }
@@ -361,8 +345,8 @@ const Home = () => {
         if (!dateString) return '';
         try {
             const date = new Date(dateString);
-            const year = date.getFullYear().toString().slice(-2); // Get last 2 digits of year
-            const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+            const year = date.getFullYear().toString().slice(-2); 
+            const month = (date.getMonth() + 1).toString().padStart(2, '0'); 
             const day = date.getDate().toString().padStart(2, '0');
             return `_${year}${month}${day}`;
         } catch (error) {
@@ -475,12 +459,10 @@ const Home = () => {
     const getFilteredProducts = () => {
         if (!selectedCategory) return [];
 
-        // Find the selected category in the original data
         const categoryData = originalData.find(
             (c) => c.id === selectedCategory.id
         );
 
-        // If category has children (products), convert the object to array
         if (categoryData && categoryData.children) {
             return Object.entries(categoryData.children).map(([id, name]) => ({
                 id,
@@ -496,7 +478,6 @@ const Home = () => {
         <div className="p-6">
             <Breadcrumb className="mb-4" items={breadcrumbItems} />
 
-            {/* Product and Category Links */}
             <div className="mb-4">
                 <div className="mb-2">
                     <h3 className="text-lg font-medium">{t("category")}:</h3>

@@ -23,30 +23,25 @@ const AddEditResource = ({
     const [isUploading, setIsUploading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     
-    // Create refs for input fields
     const inputRefs = useRef({});
 
     const validateInputs = () => {
         const newErrors = {};
         
-        // Check display name
         if (!resource?.name || resource.name.trim() === '') {
             newErrors.name = t("resourceNameRequired");
         }
 
-        // Check product
         if (!resource?.product) {
             newErrors.product = t("productRequired");
         }
 
-        // Check all enabled language inputs
         const emptyLanguages = languages
             .filter(lang => !resource?.names?.[lang.id] || 
                            !resource.names[lang.id].trim());
 
         if (emptyLanguages?.length > 0) {
             newErrors.languages = emptyLanguages.map(lang => lang.id);
-            // Set active tab to first empty language
             setActiveTab(emptyLanguages[0].id);
         }
 
@@ -54,17 +49,14 @@ const AddEditResource = ({
         return Object.keys(newErrors).length === 0;
     };
 
-    // Make validate method available to parent
     useEffect(() => {
         if (typeof onChange === 'function') {
             onChange.validate = validateInputs;
         }
     }, [resource, languages]);
 
-    // Initialize tabs when component mounts or languages change
     useEffect(() => {
         if (languages?.length > 0) {
-            // Filter enabled languages first
             const enabledLanguages = languages
             
             if (enabledLanguages.length > 0) {
@@ -74,10 +66,8 @@ const AddEditResource = ({
         }
     }, [languages]);
 
-    // Focus input when tab changes
     useEffect(() => {
         if (activeTab && inputRefs.current[activeTab]) {
-            // Use setTimeout to ensure the tab has fully rendered
             setTimeout(() => {
                 inputRefs.current[activeTab]?.focus();
             }, 100);
@@ -97,7 +87,6 @@ const AddEditResource = ({
             newNames[langId] = value.trim();
         }
         
-        // Clear error for this language when user types
         if (errors.languages) {
             setErrors(prev => ({
                 ...prev,

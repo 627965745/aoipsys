@@ -95,7 +95,6 @@ const CategoryList = () => {
     };
 
     const handleCreate = async () => {
-        // Call validation before submitting
         if (!setNewCategory.validate || !setNewCategory.validate()) {
             return;
         }
@@ -131,7 +130,7 @@ const CategoryList = () => {
         setEditingCategory({
             id: record.id,
             name: record.name,
-            names: record.names || {},  // Ensure names is initialized as an object
+            names: record.names || {},
             enabled: record.enabled,
             highlighted: record.highlighted || 0,
         });
@@ -144,7 +143,6 @@ const CategoryList = () => {
     };
 
     const handleUpdate = async () => {
-        // Call validation before submitting
         if (!setEditingCategory.validate || !setEditingCategory.validate()) {
             return;
         }
@@ -181,7 +179,6 @@ const CategoryList = () => {
         fetchData(page, newPageSize, nameFilter);
     }
 
-    // Create a separate component for the category name cell
     const CategoryNameCell = ({ record, languages }) => {
         const [showTranslations, setShowTranslations] = useState(false);
         

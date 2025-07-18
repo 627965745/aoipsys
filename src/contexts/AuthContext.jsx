@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
                 setUser({
                     name: response.data.data.name,
                     group: response.data.data.group,
-                    // Add other user data as needed
                 });
             } else {
                 setUser(null);

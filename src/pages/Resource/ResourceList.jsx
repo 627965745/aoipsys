@@ -106,7 +106,6 @@ const ResourceList = () => {
         }
     };
 
-    // Initial data fetching on mount
     useEffect(() => {
         if (!combosFetched.current) {
             combosFetched.current = true;
@@ -126,14 +125,12 @@ const ResourceList = () => {
 
             fetchInitialData();
         }
-    }, []); // Only run once on mount
+    }, []);
 
-    // Handle product filter changes from URL - but only when products are ready
     useEffect(() => {
-        if (products.length > 0) { // Only run after products are loaded
+        if (products.length > 0) {
             const productFromUrl = searchParams.get('product');
             
-            // For initial load with products just loaded
             if (!initialDataFetched.current) {
                 initialDataFetched.current = true;
                 if (productFromUrl) {
@@ -149,7 +146,6 @@ const ResourceList = () => {
                     fetchData(pagination.current, pagination.pageSize, "", "");
                 }
             }
-            // For subsequent searchParams changes (dropdown selection, clear filter)  
             else {
                 if (productFromUrl) {
                     const matchingProduct = products.find(p => p.id === productFromUrl);
@@ -173,7 +169,6 @@ const ResourceList = () => {
             return;
         }
         
-        // Initialize empty markdowns for all available languages
         const initialMarkdowns = {};
         languages.forEach(lang => {
             initialMarkdowns[lang.id] = '';
@@ -185,7 +180,7 @@ const ResourceList = () => {
             product: undefined,
             enabled: 1,
             url: "",
-            markdowns: initialMarkdowns, // Pre-populate with empty values for all languages
+            markdowns: initialMarkdowns,
             names: {},
             type: 0,
             level: 0
@@ -226,8 +221,8 @@ const ResourceList = () => {
                 product: newResource.product,
                 enabled: newResource.enabled,
                 url: newResource.url.trim(),
-                names: newResource.names || {}, // Direct object with language keys and string values
-                markdowns: newResource.markdowns || {}, // Direct object with language keys and string values
+                names: newResource.names || {}, 
+                markdowns: newResource.markdowns || {}, 
                 type: newResource.type,
                 level: newResource.level
             });
@@ -294,7 +289,7 @@ const ResourceList = () => {
             enabled: record.enabled,
             url: record.url,
             names: namesObj,
-            markdowns: markdownsObj, // Now contains empty strings for all languages
+            markdowns: markdownsObj,
             type: record.type,
             level: record.level
         });
@@ -328,8 +323,8 @@ const ResourceList = () => {
                 product: editingResource.product,
                 enabled: editingResource.enabled,
                 url: editingResource.url.trim(),
-                names: editingResource.names || {}, // Direct object with language keys and string values
-                markdowns: editingResource.markdowns || {}, // Direct object with language keys and string values
+                names: editingResource.names || {},
+                markdowns: editingResource.markdowns || {},
                 type: editingResource.type,
                 level: editingResource.level
             });
@@ -383,7 +378,6 @@ const ResourceList = () => {
             }
         }
         
-        // Fallback for empty markdown
         setCurrentMarkdown({});
         setViewMarkdown(true);
     };
@@ -401,7 +395,6 @@ const ResourceList = () => {
         setSearchParams({});
     };
 
-    // Create a separate component for the resource name cell
     const ResourceNameCell = ({ record, languages }) => {
         const [showTranslations, setShowTranslations] = useState(false);
         
@@ -422,7 +415,6 @@ const ResourceList = () => {
                     <div className="mt-1">
                         {Object.entries(record.names).map(([langId, value]) => {
                             const langName = languages?.find(l => l.id === langId)?.name || langId;
-                            // Handle both string values and object values with resource_name
                             const displayValue = typeof value === 'string' ? value : 
                                                (value && value ? value : '');
                             return (
@@ -539,13 +531,11 @@ const ResourceList = () => {
             width: "5%",
             align: "center",
             render: (markdowns, record) => {
-                // First check if record has markdowns field with content
                 const hasMarkdownsField = markdowns && 
                     Object.values(markdowns).some(content => 
                         content && content.trim() !== ''
                     );
                 
-                // Fallback to check names field for markdowns (backward compatibility)
                 const hasMarkdownsInNames = !hasMarkdownsField && 
                     record.names && 
                     Object.values(record.names).some(data => 
