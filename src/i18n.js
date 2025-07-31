@@ -286,6 +286,7 @@ const resources = {
             noSearchResults: "No search results found",
             registerSuccessTitle: "Registration successful",
             registerSuccessMessage: "Please contact Digisyntheic to authorize your account for resources browsing.",
+            emailSubscriptionText: "I would like to receive email updates about products, promotions, and news",
         },
     },
     zh_CN: {
@@ -569,6 +570,7 @@ const resources = {
             noSearchResults: "暂无搜索结果",
             registerSuccessTitle: "注册成功",
             registerSuccessMessage: "请联系顶力开放账户权限以浏览文档",
+            emailSubscriptionText: "我想收到关于产品、促销和新闻的电子邮件更新",
         },
     },
     es_ES: {
@@ -849,6 +851,7 @@ const resources = {
             noSearchResults: "No se encontraron resultados de búsqueda",
             registerSuccessTitle: "Registro exitoso",
             registerSuccessMessage: "Por favor, contacte a Digisyntheic para autorizar su cuenta para la navegación de recursos.",
+            emailSubscriptionText: "Me gustaría recibir actualizaciones por correo electrónico sobre productos, promociones y noticias",
         },
     },
 };

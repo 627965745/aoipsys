@@ -1,4 +1,4 @@
-import { Button, Form, Input, message, Modal } from "antd";
+import { Button, Form, Input, message, Modal, Checkbox } from "antd";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +39,7 @@ const Register = () => {
                 position: values.position || "",
                 industry: values.industry || "",
                 contact: values.contact || "",
+                isSubscribed: values.emailSubscription ? 1 : 0,
             };
 
             const response = await register(registerData);
@@ -69,7 +70,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="w-full max-w-xl p-8 space-y-8 bg-white rounded-lg shadow-lg relative">
+            <div className="w-full max-w-2xl p-8 space-y-8 bg-white rounded-lg shadow-lg relative">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                         {t("register")}
@@ -209,6 +210,17 @@ const Register = () => {
                             />
                         </div>
                     )}
+
+                    <Form.Item
+                        name="emailSubscription"
+                        valuePropName="checked"
+                        initialValue={true}
+                        style={{ marginBottom: "24px" }}
+                    >
+                        <Checkbox>
+                            {t("emailSubscriptionText") || "I would like to receive email updates about products, promotions, and news"}
+                        </Checkbox>
+                    </Form.Item>
 
                     <Form.Item>
                         <Button
