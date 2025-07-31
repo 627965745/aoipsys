@@ -78,12 +78,19 @@ export const login = (data) => {
     return instance.post("/Common/Login/login", qs.stringify(data));
 };
 
-export const checkUser = () => {
+export const checkUser = () => {    
     return instance.post("/Common/User/check");
+};
+export const getUserInfo = () => {
+    return instance.post("/Common/User/info");
 };
 
 export const logout = () => {
     return instance.post("/Common/User/logout");
+};
+
+export const subscribeEmail = (data) => {
+    return instance.post("/Common/User/subscribe", qs.stringify(data));
 };
 
 export const register = (data) => {

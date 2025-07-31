@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { Button, Layout as AntLayout, Menu, theme, Space, message, Select } from 'antd';
+import { Button, Layout as AntLayout, Menu, theme, Space, message, Select, Switch } from 'antd';
 import { useTranslation } from "react-i18next";
-import { logout, getLanguageCombo } from "../api/api";
+import { logout, getLanguageCombo, getUserInfo, subscribeEmail } from "../api/api";
 import { Dropdown } from 'antd';
-import { UserOutlined, LockOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, LogoutOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 
 const { Header, Content } = AntLayout;
@@ -16,6 +16,8 @@ const ClientAppLayout = () => {
     const [languages, setLanguages] = useState([]);
     const [languageName, setLanguageName] = useState(null);
     const [loadingLanguages, setLoadingLanguages] = useState(false);
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [subscriptionLoading, setSubscriptionLoading] = useState(false);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
@@ -23,6 +25,12 @@ const ClientAppLayout = () => {
     useEffect(() => {
         fetchLanguages();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetchUserSubscriptionStatus();
+        }
+    }, [user]);
 
     useEffect(() => {
         if (languages.length > 0) {
@@ -92,6 +100,41 @@ const ClientAppLayout = () => {
         }
     };
 
+    const handleSubscriptionToggle = async (checked) => {
+        setSubscriptionLoading(true);
+        try {
+            const response = await subscribeEmail({ 
+                is_subscribed: checked ? 1 : 0 
+            });
+            if (response.data?.status === 0) {
+                setIsSubscribed(checked);
+                message.success(
+                    checked 
+                        ? t('subscriptionEnabled') || 'Email subscription enabled'
+                        : t('subscriptionDisabled') || 'Email subscription disabled'
+                );
+            } else {
+                message.error(t('subscriptionUpdateFailed') || 'Failed to update subscription');
+            }
+        } catch (error) {
+            console.error("Error updating subscription:", error);
+            message.error(error.response?.data?.message || t('subscriptionUpdateError') || 'Error updating subscription');
+        } finally {
+            setSubscriptionLoading(false);
+        }
+    };
+
+    const fetchUserSubscriptionStatus = async () => {
+        try {
+            const response = await getUserInfo();
+            if (response.data?.status === 0 && response.data?.data) {
+                setIsSubscribed(response.data.data.is_subscribed === 1);
+            }
+        } catch (error) {
+            console.error("Error fetching user subscription status:", error);
+        }
+    };
+
     const handleMenuClick = ({ key }) => {
         switch (key) {
             case 'logout':
@@ -107,10 +150,29 @@ const ClientAppLayout = () => {
 
     const userMenu = {
         items: [
+            
             {
                 key: 'changePassword',
                 label: t('changePassword'),
                 icon: <LockOutlined />
+            },
+            {
+                key: 'emailSubscription',
+                label: (
+                    <div className="flex items-center justify-between w-full">
+                        <span className="flex items-center mr-2">
+                            <MailOutlined className="mr-2" />
+                            {t('subscribeToEmails') || 'Subscribe to emails'}
+                        </span>
+                        <Switch
+                            size="small"
+                            checked={isSubscribed}
+                            loading={subscriptionLoading}
+                            onChange={handleSubscriptionToggle}
+                            onClick={(checked, event) => event?.stopPropagation?.()}
+                        />
+                    </div>
+                ),
             },
             {
                 type: 'divider'

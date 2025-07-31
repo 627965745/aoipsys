@@ -39,7 +39,7 @@ const Register = () => {
                 position: values.position || "",
                 industry: values.industry || "",
                 contact: values.contact || "",
-                isSubscribed: values.emailSubscription ? 1 : 0,
+                is_subscribed: values.emailSubscription ? 1 : 0,
             };
 
             const response = await register(registerData);
