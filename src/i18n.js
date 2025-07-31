@@ -284,6 +284,8 @@ const resources = {
             categoryNotEnabled: "Category not enabled",
             productNotEnabled: "Product not enabled",
             noSearchResults: "No search results found",
+            registerSuccessTitle: "Registration successful",
+            registerSuccessMessage: "Please contact Digisyntheic to authorize your account for resources browsing.",
         },
     },
     zh_CN: {
@@ -565,6 +567,8 @@ const resources = {
             categoryNotEnabled: "类别未启用",
             productNotEnabled: "产品未启用",
             noSearchResults: "暂无搜索结果",
+            registerSuccessTitle: "注册成功",
+            registerSuccessMessage: "请联系顶力开放账户权限以浏览文档",
         },
     },
     es_ES: {
@@ -843,6 +847,8 @@ const resources = {
             categoryNotEnabled: "Categoría no habilitada",
             productNotEnabled: "Producto no habilitado",
             noSearchResults: "No se encontraron resultados de búsqueda",
+            registerSuccessTitle: "Registro exitoso",
+            registerSuccessMessage: "Por favor, contacte a Digisyntheic para autorizar su cuenta para la navegación de recursos.",
         },
     },
 };

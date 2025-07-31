@@ -147,6 +147,12 @@ export const uploadFile = (formData, config) => {
         timeout: 240000
     });
 };
+export const sendEmail = (data) => {
+    return instance.post("/Admin/email/Create", qs.stringify(data));
+};
+export const getEmailList = (data) => {
+    return instance.post("/Admin/email/read", qs.stringify(data));
+};
 export const requestPdf = (data) => {
     return instance.post("/Client/Search/pdfGet", qs.stringify(data), { timeout: 0 });
 };

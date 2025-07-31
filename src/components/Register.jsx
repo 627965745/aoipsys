@@ -1,4 +1,4 @@
-import { Button, Form, Input, message } from "antd";
+import { Button, Form, Input, message, Modal } from "antd";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,13 @@ const Register = () => {
 
             if (response.data && response.data.status === 0) {
                 message.success(t("registerSuccess"));
-                navigate("/login");
+                Modal.info({
+                    title: t("registerSuccessTitle"),
+                    content: t("registerSuccessMessage"),
+                    onOk() {
+                        navigate("/login");
+                    },
+                });
             } else {
                 message.error(
                     error.response?.data?.message || t("registerFailed")
