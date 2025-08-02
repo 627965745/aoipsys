@@ -45,6 +45,18 @@ instance.interceptors.response.use(
         if (response.data.status !== 0) {
             const url = new URL(response.config.url, response.config.baseURL);
             const endpoint = url.pathname;
+            
+            // For admin endpoints, use response.data.message directly
+            if (endpoint.toLowerCase().startsWith('/admin')) {
+                return Promise.reject({
+                    response: {
+                        data: {
+                            message: response.data.message || 'An error occurred'
+                        }
+                    }
+                });
+            }
+            
             return Promise.reject({
                 response: {
                     data: {

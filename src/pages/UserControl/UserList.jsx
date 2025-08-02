@@ -54,11 +54,11 @@ const UserList = () => {
                     total: response.data.data.total,
                 }));
             } else {
-                message.error(t('fetchUsersError'));
+                message.error(error.response?.data?.message || t('fetchUsersError'));
             }
         } catch (error) {
             console.error("Error fetching users:", error);
-            message.error(t('fetchUsersError'));
+            message.error(error.response?.data?.message || t('fetchUsersError'));
         } finally {
             setLoading(false);
         }
@@ -131,11 +131,11 @@ const UserList = () => {
                 setIsModalVisible(false);
                 fetchData(1, pagination.pageSize, searchQuery);
             } else {
-                message.error(t('userCreateError'));
+                message.error(error.response?.data?.message || t('userCreateError'));
             }
         } catch (error) {
             console.error("Error creating user:", error);
-            message.error(t('userCreateError'));
+            message.error(error.response?.data?.message || t('userCreateError'));
         }
     };
 
@@ -191,11 +191,11 @@ const UserList = () => {
                 setEditModalVisible(false);
                 fetchData(pagination.current, pagination.pageSize, searchQuery);
             } else {
-                message.error(t('userUpdateError'));
+                message.error(error.response?.data?.message || t('userUpdateError'));
             }
         } catch (error) {
             console.error("Error updating user:", error);
-            message.error(t('userUpdateError'));
+            message.error(error.response?.data?.message || t('userUpdateError'));
         }
     };
 
@@ -221,11 +221,11 @@ const UserList = () => {
                 setSuccessModalVisible(true);
                 setResetPasswordModalVisible(false);
             } else {
-                message.error(t('resetPasswordError'));
+                message.error(error.response?.data?.message || t('resetPasswordError'));
             }
         } catch (error) {
             console.error("Error resetting password:", error);
-            message.error(t('resetPasswordError'));
+            message.error(error.response?.data?.message || t('resetPasswordError'));
         }
     };
 
