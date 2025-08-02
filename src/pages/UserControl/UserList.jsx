@@ -26,7 +26,8 @@ const UserList = () => {
         company: "",
         position: "",
         industry: "",
-        contact: ""
+        contact: "",
+        is_subscribed: 0
     });
 
     const [editingUser, setEditingUser] = useState(null);
@@ -78,7 +79,8 @@ const UserList = () => {
             company: "",
             position: "",
             industry: "",
-            contact: ""
+            contact: "",
+            is_subscribed: 0
         });
     };
 
@@ -93,7 +95,8 @@ const UserList = () => {
             company: "",
             position: "",
             industry: "",
-            contact: ""
+            contact: "",
+            is_subscribed: 0
         });
     };
 
@@ -117,7 +120,8 @@ const UserList = () => {
                 company: newUser.company,
                 position: newUser.position,
                 industry: newUser.industry,
-                contact: newUser.contact
+                contact: newUser.contact,
+                is_subscribed: newUser.is_subscribed
             });
 
             if (response.data.status === 0) {
@@ -146,7 +150,8 @@ const UserList = () => {
             company: record.company || "",
             position: record.position || "",
             industry: record.industry || "",
-            contact: record.contact || ""
+            contact: record.contact || "",
+            is_subscribed: record.is_subscribed || 0
         });
         setEditModalVisible(true);
     };
@@ -177,7 +182,8 @@ const UserList = () => {
                 company: editingUser.company,
                 position: editingUser.position,
                 industry: editingUser.industry,
-                contact: editingUser.contact
+                contact: editingUser.contact,
+                is_subscribed: editingUser.is_subscribed
             });
 
             if (response.data.status === 0) {
@@ -347,7 +353,7 @@ const UserList = () => {
         {
             title: t('contact'),
             dataIndex: 'contact',
-            width: '15%',
+            width: '13%',
             render: (contact) => (
                 contact ? contact : <span className="text-gray-400">{t('notProvided')}</span>
             )
@@ -355,11 +361,22 @@ const UserList = () => {
         {
             title: t('status'),
             dataIndex: 'enabled',
-            width: '8%',
+            width: '5%',
             align: 'center',
             render: (enabled) => (
                 <span style={{ color: enabled ? '#52c41a' : '#ff4d4f' }}>
                     {enabled ? <CheckOutlined /> : <CloseOutlined />}
+                </span>
+            ),
+        },
+        {
+            title: '订阅状态',
+            dataIndex: 'is_subscribed',
+            width: '5%',
+            align: 'center',
+            render: (is_subscribed) => (
+                <span style={{ color: is_subscribed ? '#52c41a' : '#ff4d4f' }}>
+                    {is_subscribed ? <CheckOutlined /> : <CloseOutlined />}
                 </span>
             ),
         },
