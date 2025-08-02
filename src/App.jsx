@@ -16,6 +16,7 @@ import ClientAppLayout from "./components/ClientAppLayout";
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LangPage from "./pages/LanguageControl/LangPage";
+import EmailPage from "./pages/Email/EmailPage";
 function App() {
     return (
         <Router>
@@ -37,6 +38,7 @@ function App() {
                         <Route path="product" element={<ProductPage />} />
                         <Route path="resource" element={<ResourcePage />} />
                         <Route path="user" element={<UserPage />} />
+                        <Route path="email" element={<EmailPage />} />
                         <Route path="language" element={<LangPage />} />
                         <Route path="login" element={<AdminLoginPage />} />
                     </Route>

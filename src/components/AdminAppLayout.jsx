@@ -151,6 +151,10 @@ const AdminAppLayout = () => {
                             label: t("userManagement")
                         },
                         {
+                            key: "email",
+                            label: t("emailManagement")
+                        },
+                        {
                             key: "language",
                             label: t("languageManagement")
                         },

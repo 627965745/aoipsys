@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { Button } from 'antd';
 import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
@@ -13,6 +13,35 @@ const TinyMCEEditor = ({
 }) => {
     const editorRef = useRef(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [editorInstance, setEditorInstance] = useState(null);
+
+    // Set initial content when editor is ready
+    useEffect(() => {
+        if (editorInstance && content) {
+            if (editorInstance.getContent() === '') {
+                editorInstance.setContent(content);
+            }
+        }
+    }, [editorInstance]);
+
+    // Update editor content when prop changes from external source
+    useEffect(() => {
+        if (editorInstance) {
+            const currentContent = editorInstance.getContent();
+            if (currentContent !== content && content !== '') {
+                // Save cursor position
+                const bookmark = editorInstance.selection.getBookmark();
+                editorInstance.setContent(content);
+                // Restore cursor position
+                try {
+                    editorInstance.selection.moveToBookmark(bookmark);
+                } catch (e) {
+                    // If bookmark restoration fails, just focus the editor
+                    editorInstance.focus();
+                }
+            }
+        }
+    }, [content]);
 
     const handleEditorChange = (content, editor) => {
         if (onChange) {
@@ -26,21 +55,22 @@ const TinyMCEEditor = ({
 
     // TinyMCE configuration with Outlook-like features
     const editorConfig = {
-        height: isFullscreen ? 'calc(100vh - 120px)' : height,
-        menubar: true,
+        height: isFullscreen ? 'calc(100vh - 120px)' : (height === "100%" ? '100%' : height),
+        menubar: false,
+        language: 'zh_CN',
         plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
             'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
             'emoticons', 'autosave', 'save', 'directionality', 'nonbreaking',
-            'pagebreak', 'quickbars', 'textcolor', 'colorpicker'
+            'pagebreak', 'quickbars'
         ],
         toolbar: [
-            'undo redo | save | formatselect fontselect fontsizeselect',
-            'bold italic underline strikethrough | forecolor backcolor | subscript superscript',
+            'undo redo | blocks fontfamily fontsize',
+            'bold italic underline strikethrough | forecolor backcolor | table link image media',
             'alignleft aligncenter alignright alignjustify | outdent indent',
-            'bullist numlist | table | link image media | emoticons charmap',
-            'searchreplace | visualblocks code preview fullscreen help'
+            'bullist numlist | subscript superscript | emoticons charmap',
+            'searchreplace | visualblocks code'
         ].join(' | '),
         menu: {
             file: { title: 'File', items: 'newdocument restoredraft | preview | export print | deleteallconversations' },
@@ -51,18 +81,24 @@ const TinyMCEEditor = ({
             tools: { title: 'Tools', items: 'spellchecker spellcheckerlanguage | code wordcount' },
             table: { title: 'Table', items: 'inserttable | cell row column | tableprops deletetable' }
         },
-        font_formats: 'Arial=arial,helvetica,sans-serif; Arial Black=arial black,avant garde; Book Antiqua=book antiqua,palatino; Comic Sans MS=comic sans ms,sans-serif; Courier New=courier new,courier; Georgia=georgia,palatino; Helvetica=helvetica; Impact=impact,chicago; Symbol=symbol; Tahoma=tahoma,arial,helvetica,sans-serif; Terminal=terminal,monaco; Times New Roman=times new roman,times; Trebuchet MS=trebuchet ms,geneva; Verdana=verdana,geneva; Webdings=webdings; Wingdings=wingdings,zapf dingbats',
-        fontsize_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 22pt 24pt 26pt 28pt 36pt 48pt 72pt',
+        font_formats: 'Arial=arial,helvetica,sans-serif; Arial Black=arial black,avant garde; Book Antiqua=book antiqua,palatino; Calibri=calibri,sans-serif; Cambria=cambria,serif; Comic Sans MS=comic sans ms,sans-serif; Consolas=consolas,monaco,monospace; Courier New=courier new,courier,monospace; Georgia=georgia,palatino,serif; Helvetica=helvetica,arial,sans-serif; Impact=impact,chicago,sans-serif; Lucida Console=lucida console,monaco,monospace; Lucida Sans=lucida sans,lucida grande,sans-serif; Microsoft YaHei=microsoft yahei,sans-serif; Palatino=palatino,palatino linotype,serif; Segoe UI=segoe ui,arial,sans-serif; SimSun=simsun,serif; Symbol=symbol; Tahoma=tahoma,arial,helvetica,sans-serif; Terminal=terminal,monaco,monospace; Times New Roman=times new roman,times,serif; Trebuchet MS=trebuchet ms,geneva,sans-serif; Verdana=verdana,geneva,sans-serif; Webdings=webdings; Wingdings=wingdings,zapf dingbats',
+        fontsize_formats: '8px 9px 10px 11px 12px 13px 14px 15px 16px 17px 18px 20px 22px 24px 26px 28px 30px 32px 34px 36px 38px 40px 42px 44px 46px 48px 50px 52px 54px 56px 58px 60px 64px 68px 72px 80px 88px 96px',
         line_height_formats: '1 1.1 1.2 1.3 1.4 1.5 1.6 1.8 2 2.5 3',
         table_default_attributes: {
-            border: '1'
+            border: '1',
+            style: 'border-collapse: collapse; border: 1px solid black;'
         },
         table_default_styles: {
-            borderCollapse: 'collapse'
+            borderCollapse: 'collapse',
+            border: '1px solid black'
+        },
+        table_cell_default_styles: {
+            border: '1px solid black',
+            padding: '5px'
         },
         image_advtab: true,
-        quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
-        quickbars_insert_toolbar: 'quickimage quicktable',
+        quickbars_selection_toolbar: 'bold italic fontfamily fontsize | quicklink h1 h2 h3',
+        quickbars_insert_toolbar: false,
         contextmenu: 'link image table',
         skin: 'oxide',
         content_css: 'default',
@@ -83,6 +119,7 @@ const TinyMCEEditor = ({
         promotion: false,
         setup: (editor) => {
             editor.on('init', () => {
+                setEditorInstance(editor);
                 if (disabled) {
                     editor.setMode('readonly');
                 }
@@ -91,64 +128,75 @@ const TinyMCEEditor = ({
     };
 
     return (
-        <div className={`tinymce-editor-wrapper ${isFullscreen ? 'fullscreen' : ''}`}>
-            <div className="editor-controls">
+        <div className={`relative border border-gray-300 rounded-md overflow-hidden h-full ${
+            isFullscreen ? 'tinymce-fullscreen' : ''
+        }`}>
+            <div className="absolute top-3 right-1 z-50">
                 <Button 
                     type="primary"
                     icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                     onClick={toggleFullscreen}
-                    title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                    title={isFullscreen ? "退出全屏" : "全屏编辑"}
                     size="small"
+                    className="mr-5"
                 >
-                    {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                    {isFullscreen ? "退出全屏" : "全屏编辑"}
                 </Button>
             </div>
             
-            <Editor
-                ref={editorRef}
-                initialValue={content}
-                init={editorConfig}
-                onEditorChange={handleEditorChange}
-                disabled={disabled}
-            />
+            <div className="h-full">
+                <Editor
+                    apiKey="n5tf3rcf536lcxh3jdnjhmlquebrc9dh91skj22kbxwi4cf7"
+                    onInit={(evt, editor) => editorRef.current = editor}
+                    initialValue=""
+                    init={editorConfig}
+                    onEditorChange={handleEditorChange}
+                    disabled={disabled}
+                />
+            </div>
             
-            <style jsx>{`
-                .tinymce-editor-wrapper {
-                    position: relative;
-                    border: 1px solid #d9d9d9;
-                    border-radius: 6px;
-                    overflow: hidden;
+            <style>{`
+                .tox-tinymce {
+                    border: none !important;
+                    height: 100% !important;
                 }
                 
-                .tinymce-editor-wrapper.fullscreen {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    z-index: 1000;
-                    background: white;
-                    border: none;
-                    border-radius: 0;
+                .tox-edit-area__iframe {
+                    height: 100% !important;
                 }
                 
-                .editor-controls {
-                    position: absolute;
-                    top: 8px;
-                    right: 8px;
-                    z-index: 1001;
+                .tox-toolbar-overlord {
+                    padding-right: 100px !important;
                 }
                 
-                .tinymce-editor-wrapper :global(.tox-tinymce) {
-                    border: none;
-                }
-                
-                .tinymce-editor-wrapper.fullscreen :global(.tox-tinymce) {
+                .tinymce-fullscreen {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    z-index: 1000 !important;
+                    background: white !important;
+                    border: none !important;
+                    border-radius: 0 !important;
+                    width: 100vw !important;
                     height: 100vh !important;
                 }
                 
-                .tinymce-editor-wrapper :global(.tox-toolbar-overlord) {
-                    padding-right: 100px;
+                .tinymce-fullscreen .tox-tinymce {
+                    height: 100vh !important;
+                }
+                
+                /* Ensure table borders are visible */
+                .mce-content-body table {
+                    border-collapse: collapse !important;
+                    border: 1px solid black !important;
+                }
+                
+                .mce-content-body table td,
+                .mce-content-body table th {
+                    border: 1px solid black !important;
+                    padding: 5px !important;
                 }
             `}</style>
         </div>
