@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message } from "antd";
 import { useTranslation } from "react-i18next";
-import { login } from "../api/api";
+import { login, getCaptcha } from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -18,9 +18,12 @@ const ClientLogin = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
-            const uniqueUrl = `${url}?t=${new Date().getTime()}`;
-            setCaptchaUrl(uniqueUrl);
+            const response = await getCaptcha();
+            if (response.data.status === 0) {
+                setCaptchaUrl(response.data.data.image);
+            } else {
+                message.error(t("captchaLoadError"));
+            }
         } catch (error) {
             message.error(t("captchaLoadError"));
         }

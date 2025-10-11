@@ -2,7 +2,7 @@ import { Button, Form, Input, message, Modal, Checkbox } from "antd";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { register } from "../api/api";
+import { register, getCaptcha } from "../api/api";
 
 const Register = () => {
     const { t } = useTranslation();
@@ -17,11 +17,12 @@ const Register = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const url = `${
-                import.meta.env.VITE_API_BASE_URL
-            }/Common/Captcha/get`;
-            const uniqueUrl = `${url}?t=${new Date().getTime()}`;
-            setCaptchaUrl(uniqueUrl);
+            const response = await getCaptcha();
+            if (response.data.status === 0) {
+                setCaptchaUrl(response.data.data.image);
+            } else {
+                message.error(t("captchaLoadError"));
+            }
         } catch (error) {
             message.error(t("captchaLoadError"));
         }

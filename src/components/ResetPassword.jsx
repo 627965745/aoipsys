@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message, Image, Select } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
-import { resetPassword, logout } from "../api/api";
+import { resetPassword, logout, getCaptcha } from "../api/api";
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useAuth } from "../contexts/AuthContext";
 
@@ -24,11 +24,14 @@ const ResetPassword = () => {
         refreshCaptcha();
     }, []);
 
-    const refreshCaptcha = () => {
+    const refreshCaptcha = async () => {
         try {
-            const url = `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`;
-            const uniqueUrl = `${url}?t=${new Date().getTime()}`;
-            setCaptchaUrl(uniqueUrl);
+            const response = await getCaptcha();
+            if (response.data.status === 0) {
+                setCaptchaUrl(response.data.data.image);
+            } else {
+                message.error(t("captchaLoadError"));
+            }
         } catch (error) {
             message.error(t("captchaLoadError"));
         }
