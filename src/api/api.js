@@ -2,6 +2,19 @@ import axios from "axios";
 import qs from "qs";
 import i18next from 'i18next';
 
+// Configure qs.stringify options to preserve empty values
+const qsOptions = {
+    skipNulls: false,
+    allowEmptyArrays: true,
+    encode: true
+};
+
+// Helper function to stringify data with consistent options
+const stringifyData = (data) => {
+    if (!data) return '';
+    return qs.stringify(data, qsOptions);
+};
+
 const getErrorMessage = (status, endpoint = '') => {
     if ([21, 11, 12, 22, 51, 52, 61].includes(status)) {
         return i18next.t(`error.${status}`);
@@ -83,11 +96,11 @@ export const getCaptcha = () => {
 };
 
 export const validateEmail = (data) => {
-    return instance.post("/Common/Login/emailValidate", qs.stringify(data));
+    return instance.post("/Common/Login/emailValidate", stringifyData(data));
 };
 
 export const login = (data) => {
-    return instance.post("/Common/Login/login", qs.stringify(data));
+    return instance.post("/Common/Login/login", stringifyData(data));
 };
 
 export const checkUser = () => {    
@@ -102,63 +115,63 @@ export const logout = () => {
 };
 
 export const subscribeEmail = (data) => {
-    return instance.post("/Common/User/subscribe", qs.stringify(data));
+    return instance.post("/Common/User/subscribe", stringifyData(data));
 };
 
 export const register = (data) => {
-    return instance.post("/Common/Login/register", qs.stringify(data));
+    return instance.post("/Common/Login/register", stringifyData(data));
 };
 
 export const getCategoryList = (data) => {
-    return instance.post("/Admin/Category/read", qs.stringify(data));
+    return instance.post("/Admin/Category/read", stringifyData(data));
 };
 
 export const createCategory = (data) => {
-    return instance.post("/Admin/Category/create", qs.stringify(data));
+    return instance.post("/Admin/Category/create", stringifyData(data));
 };
 
 export const getCategoryDropdown = (data) => {
   return instance.post("/Admin/Category/combo");
 };
 export const updateCategory = (data) => {
-    return instance.post("/Admin/Category/update", qs.stringify(data));
+    return instance.post("/Admin/Category/update", stringifyData(data));
 };
 export const getProductList = (data) => {
-  return instance.post("/Admin/Product/read", qs.stringify(data));
+  return instance.post("/Admin/Product/read", stringifyData(data));
 };
 
 export const createProduct = (data) => {
-  return instance.post("/Admin/Product/create", qs.stringify(data));
+  return instance.post("/Admin/Product/create", stringifyData(data));
 };
 export const getProductDropdown = (data) => {
   return instance.post("/Admin/Product/combo");
 };
 
 export const updateProduct = (data) => {
-  return instance.post("/Admin/Product/update", qs.stringify(data));
+  return instance.post("/Admin/Product/update", stringifyData(data));
 };
 export const getResourceList = (data) => {
-  return instance.post("/Admin/Resource/read", qs.stringify(data));
+  return instance.post("/Admin/Resource/read", stringifyData(data));
 };
 
 export const createResource = (data) => {
-  return instance.post("/Admin/Resource/create", qs.stringify(data));
+  return instance.post("/Admin/Resource/create", stringifyData(data));
 };
 
 export const updateResource = (data) => {
-  return instance.post("/Admin/Resource/update", qs.stringify(data));
+  return instance.post("/Admin/Resource/update", stringifyData(data));
 };
 export const getUserList = (data) => {  
-  return instance.post("/Admin/Operator/read", qs.stringify(data));
+  return instance.post("/Admin/Operator/read", stringifyData(data));
 };
 export const createUser = (data) => {
-  return instance.post("/Admin/Operator/create", qs.stringify(data));
+  return instance.post("/Admin/Operator/create", stringifyData(data));
 };
 export const updateUser = (data) => {
-  return instance.post("/Admin/Operator/update", qs.stringify(data));
+  return instance.post("/Admin/Operator/update", stringifyData(data));
 };
 export const resetUserPassword = (data) => {
-  return instance.post("/Admin/Operator/reset", qs.stringify(data));
+  return instance.post("/Admin/Operator/reset", stringifyData(data));
 };
 export const uploadFile = (formData, config) => {
     return instance.post("/Admin/Upload/upload", formData, {
@@ -167,27 +180,33 @@ export const uploadFile = (formData, config) => {
     });
 };
 export const sendEmail = (data) => {
-    return instance.post("/Admin/Email/create", qs.stringify(data));
+    return instance.post("/Admin/Email/create", stringifyData(data));
 };
 export const getEmailList = (data) => {
-    return instance.post("/Admin/Email/read", qs.stringify(data));
+    return instance.post("/Admin/Email/read", stringifyData(data));
 };
 export const requestPdf = (data) => {
-    return instance.post("/Client/Search/pdfGet", qs.stringify(data), { timeout: 0 });
+    return instance.post("/Client/Search/pdfGet", stringifyData(data), { timeout: 0 });
 };
 export const resetPassword = (data) => {
-    return instance.post("/Common/User/reset", qs.stringify(data));
+    return instance.post("/Common/User/reset", stringifyData(data));
 };
 
 export const getResource = (data) => {
-    return instance.post("/Client/Search/resource", qs.stringify(data));
+    return instance.post("/Client/Search/resource", stringifyData(data));
+};
+export const getMarkdown = (data) => {
+    return instance.post("/Admin/Resource/markdown", stringifyData(data));
+};
+export const getUserMarkdown = (data) => {
+    return instance.post("/Client/Search/markdown", stringifyData(data));
 };
 export const getResourceCondition = (data) => {
-    return instance.post("/Client/Search/condition", qs.stringify(data));
+    return instance.post("/Client/Search/condition", stringifyData(data));
 };
 
 export const getLanguageList = (data) => {
-  return instance.post("/Admin/Language/read", qs.stringify(data));
+  return instance.post("/Admin/Language/read", stringifyData(data));
 };
 
 export const getLanguageCombo = (data) => {
@@ -195,11 +214,11 @@ export const getLanguageCombo = (data) => {
 };
 
 export const createLanguage = (data) => {
-  return instance.post("/Admin/Language/create", qs.stringify(data));
+  return instance.post("/Admin/Language/create", stringifyData(data));
 };
 
 export const updateLanguage = (data) => {
-  return instance.post("/Admin/Language/update", qs.stringify(data));
+  return instance.post("/Admin/Language/update", stringifyData(data));
 };
 
 export default instance;

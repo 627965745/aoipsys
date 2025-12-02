@@ -81,11 +81,8 @@ const AddEditResource = ({
     const handleLanguageNameChange = (langId, value) => {
         const newNames = { ...(resource.names || {}) };
         
-        if (value.trim() === '') {
-            delete newNames[langId];
-        } else {
-            newNames[langId] = value.trim();
-        }
+        // Keep empty strings instead of deleting keys to ensure parameter is sent to API
+        newNames[langId] = value.trim();
         
         if (errors.languages) {
             setErrors(prev => ({
@@ -100,11 +97,9 @@ const AddEditResource = ({
     const handleLanguageMarkdownChange = (langId, value) => {
         const newMarkdowns = { ...(resource.markdowns || {}) };
         
-        if (!value.trim()) {
-            delete newMarkdowns[langId];
-        } else {
-            newMarkdowns[langId] = value.trim();
-        }
+        // Keep empty strings instead of deleting keys to ensure parameter is sent to API
+        // This prevents the markdown parameter from disappearing when clearing multiple languages
+        newMarkdowns[langId] = value.trim();
         
         onChange({ ...resource, markdowns: newMarkdowns });
     };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Table, Input, Button, message, Modal, Radio, Space, Tabs, Tooltip } from "antd";
 import { Link, useNavigate } from "react-router-dom"; // Add this import
 import { useTranslation } from "react-i18next";
@@ -33,6 +33,7 @@ const CategoryList = () => {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
     const [languages, setLanguages] = useState();
+    const isManualFetch = useRef(false);
 
     const fetchData = async (page, rows, query) => {
         setLoading(true);
@@ -47,6 +48,7 @@ const CategoryList = () => {
                 setData(response.data.data.rows);
                 setPagination(prev => ({
                     ...prev,
+                    current: page,
                     total: response.data.data.total,
                 }));
             } else {
@@ -229,6 +231,7 @@ const CategoryList = () => {
             title: t("categoryName"),
             dataIndex: "name",
             render: (_, record) => <CategoryNameCell record={record} languages={languages} />,
+            filteredValue: nameFilter ? [nameFilter] : null,
             filterDropdown: ({
                 setSelectedKeys,
                 selectedKeys,
@@ -246,8 +249,10 @@ const CategoryList = () => {
                             )
                         }
                         onPressEnter={() => {
-                            setNameFilter(selectedKeys[0]);
-                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0]);
+                            const query = selectedKeys[0] || "";
+                            setNameFilter(query);
+                            isManualFetch.current = true;
+                            fetchData(1, pagination.pageSize, query);
                             confirm();
                         }}
                         style={{
@@ -259,8 +264,10 @@ const CategoryList = () => {
                     <Button
                         type="primary"
                         onClick={() => {
-                            setNameFilter(selectedKeys[0]);
-                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0]);
+                            const query = selectedKeys[0] || "";
+                            setNameFilter(query);
+                            isManualFetch.current = true;
+                            fetchData(1, pagination.pageSize, query);
                             confirm();
                         }}
                         size="small"
@@ -272,7 +279,8 @@ const CategoryList = () => {
                         onClick={() => {
                             clearFilters();
                             setNameFilter("");
-                            fetchData(pagination.current, pagination.pageSize, "");
+                            isManualFetch.current = true;
+                            fetchData(1, pagination.pageSize, "");
                             confirm();
                         }}
                         size="small"
@@ -377,9 +385,18 @@ const CategoryList = () => {
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
-                    onChange: (page, newPageSize) => {
-                        handleTableChange(page, newPageSize);
-                    },
+                }}
+                onChange={(paginationConfig, filters, sorter) => {
+                    // Skip if this was triggered by a manual fetch (search/reset)
+                    if (isManualFetch.current) {
+                        isManualFetch.current = false;
+                        return;
+                    }
+                    // Only handle pagination changes, ignore filter changes
+                    if (paginationConfig.current !== pagination.current || 
+                        paginationConfig.pageSize !== pagination.pageSize) {
+                        handleTableChange(paginationConfig.current, paginationConfig.pageSize);
+                    }
                 }}
                 loading={loading}
                 rowKey="id"

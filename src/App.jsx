@@ -12,7 +12,6 @@ import ProductPage from "./pages/Product/ProductPage";
 import ResourcePage from "./pages/Resource/ResourcePage";
 import UserPage from "./pages/UserControl/UserPage";
 import ClientHome from "./pages/ClientHome/Home";
-import ClientAppLayout from "./components/ClientAppLayout";
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LangPage from "./pages/LanguageControl/LangPage";
@@ -43,15 +42,18 @@ function App() {
                         <Route path="login" element={<AdminLoginPage />} />
                     </Route>
 
+                    {/* Client Routes - Standalone pages with integrated layout */}
                     <Route path="/" element={
                         <ProtectedRoute requiredGroups={[1, 3]}>
-                            <ClientAppLayout />
+                            <ClientHome />
                         </ProtectedRoute>
-                    }>
-                        <Route path="" element={<ClientHome />} />
-                        <Route path="register" element={<Register />} />
-                        <Route path="login" element={<ClientLoginPage />} />
-                    </Route>
+                    } />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/login" element={
+                        <ProtectedRoute>
+                            <ClientLoginPage />
+                        </ProtectedRoute>
+                    } />
                 </Routes>
             </AuthProvider>
         </Router>

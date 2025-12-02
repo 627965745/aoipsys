@@ -56,6 +56,7 @@ const ProductList = () => {
     const [currentCategoryName, setCurrentCategoryName] = useState("");
     const initialDataFetched = useRef(false);
     const combosFetched = useRef(false);
+    const isManualFetch = useRef(false);
 
     const fetchCategories = async () => {
         try {
@@ -100,6 +101,7 @@ const ProductList = () => {
                 setData(response.data.data.rows);
                 setPagination(prev => ({
                     ...prev,
+                    current: page,
                     total: response.data.data.total,
                 }));
             } else {
@@ -333,6 +335,7 @@ const ProductList = () => {
             title: t("productName"),
             dataIndex: "name",
             render: (text, record) => <ProductNameCell record={record} languages={languages} />,
+            filteredValue: nameFilter ? [nameFilter] : null,
             filterDropdown: ({
                 setSelectedKeys,
                 selectedKeys,
@@ -350,8 +353,10 @@ const ProductList = () => {
                             )
                         }
                         onPressEnter={() => {
-                            setNameFilter(selectedKeys[0]);
-                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
+                            const query = selectedKeys[0] || "";
+                            setNameFilter(query);
+                            isManualFetch.current = true;
+                            fetchData(1, pagination.pageSize, query, categoryFilter);
                             confirm();
                         }}
                         style={{
@@ -363,8 +368,10 @@ const ProductList = () => {
                     <Button
                         type="primary"
                         onClick={() => {
-                            setNameFilter(selectedKeys[0]);
-                            fetchData(pagination.current, pagination.pageSize, selectedKeys[0], categoryFilter);
+                            const query = selectedKeys[0] || "";
+                            setNameFilter(query);
+                            isManualFetch.current = true;
+                            fetchData(1, pagination.pageSize, query, categoryFilter);
                             confirm();
                         }}
                         size="small"
@@ -376,7 +383,8 @@ const ProductList = () => {
                         onClick={() => {
                             clearFilters();
                             setNameFilter("");
-                            fetchData(pagination.current, pagination.pageSize, "", categoryFilter);
+                            isManualFetch.current = true;
+                            fetchData(1, pagination.pageSize, "", categoryFilter);
                             confirm();
                         }}
                         size="small"
@@ -512,9 +520,18 @@ const ProductList = () => {
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
-                    onChange: (page, newPageSize) => {
-                        handleTableChange(page, newPageSize);
-                    },
+                }}
+                onChange={(paginationConfig, filters, sorter) => {
+                    // Skip if this was triggered by a manual fetch (search/reset)
+                    if (isManualFetch.current) {
+                        isManualFetch.current = false;
+                        return;
+                    }
+                    // Only handle pagination changes, ignore filter changes
+                    if (paginationConfig.current !== pagination.current || 
+                        paginationConfig.pageSize !== pagination.pageSize) {
+                        handleTableChange(paginationConfig.current, paginationConfig.pageSize);
+                    }
                 }}
                 loading={loading}
                 rowKey="id"

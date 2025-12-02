@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Table, Input, Button, message, Modal, Radio, Space, Select, Tooltip, Tabs } from "antd";
 import { useTranslation } from "react-i18next";
-import { getResourceList, createResource, updateResource, getProductDropdown, getLanguageCombo } from "../../api/api";
+import { getResourceList, createResource, updateResource, getProductDropdown, getLanguageCombo, getMarkdown } from "../../api/api";
 import { SearchOutlined, PlusOutlined, CheckOutlined, CloseOutlined, LinkOutlined, EyeOutlined, TranslationOutlined } from "@ant-design/icons";
 import MdViewer from "../../components/MdViewer";
 import MdEditor from '../../components/MdEditor';
@@ -35,6 +35,7 @@ const ResourceList = () => {
     });
     const [editModalVisible, setEditModalVisible] = useState(false);    
     const [editingResource, setEditingResource] = useState(null);
+    const [loadingEdit, setLoadingEdit] = useState(false);
     const [products, setProducts] = useState([]);
     const [viewMarkdown, setViewMarkdown] = useState(false);
     const [currentMarkdown, setCurrentMarkdown] = useState({});
@@ -43,6 +44,7 @@ const ResourceList = () => {
     const [languages, setLanguages] = useState([]);
     const initialDataFetched = useRef(false);
     const combosFetched = useRef(false);
+    const isManualFetch = useRef(false);
 
     const typeOptions = [
         { value: 0, label: t('document') },
@@ -93,6 +95,7 @@ const ResourceList = () => {
                 setData(response.data.data.rows);
                 setPagination(prev => ({
                     ...prev,
+                    current: page,
                     total: response.data.data.total,
                 }));
             } else {
@@ -240,61 +243,72 @@ const ResourceList = () => {
         }
     };
 
-    const handleEdit = (record) => {
-        const namesObj = {};
-        const markdownsObj = {};
+    const handleEdit = async (record) => {
+        setLoadingEdit(true);
         
-        languages.forEach(lang => {
-            markdownsObj[lang.id] = '';
-        });
-        
-        if (record.names && typeof record.names === 'object' && !Array.isArray(record.names)) {
-            Object.entries(record.names).forEach(([language, value]) => {
-                if (typeof value === 'string') {
-                    namesObj[language] = value;
-                } 
-                else if (value && value.resource_name) {
-                    namesObj[language] = value.resource_name;
+        try {
+            const namesObj = {};
+            const markdownsObj = {};
+            
+            // Initialize empty markdowns for all languages
+            languages.forEach(lang => {
+                markdownsObj[lang.id] = '';
+            });
+            
+            // Parse names
+            if (record.names && typeof record.names === 'object' && !Array.isArray(record.names)) {
+                Object.entries(record.names).forEach(([language, value]) => {
+                    if (typeof value === 'string') {
+                        namesObj[language] = value;
+                    } 
+                    else if (value && value.resource_name) {
+                        namesObj[language] = value.resource_name;
+                    }
+                });
+            } 
+            else if (record.names && Array.isArray(record.names)) {
+                record.names.forEach(item => {
+                    namesObj[item.language] = item.value;
+                });
+            }
+            
+            // Fetch markdown data if available
+            if (record.is_markdown) {
+                try {
+                    const response = await getMarkdown({ id: record.id });
+                    if (response.data.status === 0 && response.data.data) {
+                        const markdownData = response.data.data;
+                        // Convert array format to object format: [{language, value}] => {language: value}
+                        if (Array.isArray(markdownData)) {
+                            markdownData.forEach(item => {
+                                if (item.language && item.value !== undefined) {
+                                    markdownsObj[item.language] = item.value;
+                                }
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching markdown:", error);
+                    message.error(error.response?.data?.message || t('fetchMarkdownError'));
                 }
+            }
+            
+            setEditingResource({
+                id: record.id,
+                name: record.name,
+                product: record.product,
+                enabled: record.enabled,
+                url: record.url,
+                names: namesObj,
+                markdowns: markdownsObj,
+                type: record.type,
+                level: record.level
             });
-        } 
-        else if (record.names && Array.isArray(record.names)) {
-            record.names.forEach(item => {
-                namesObj[item.language] = item.value;
-            });
+            
+            setEditModalVisible(true);
+        } finally {
+            setLoadingEdit(false);
         }
-        
-        if (record.markdowns && typeof record.markdowns === 'object' && !Array.isArray(record.markdowns)) {
-            Object.entries(record.markdowns).forEach(([language, value]) => {
-                markdownsObj[language] = value;
-            });
-        }
-        else if (record.markdowns && Array.isArray(record.markdowns)) {
-            record.markdowns.forEach(item => {
-                markdownsObj[item.language] = item.value;
-            });
-        }
-        else if (record.names && typeof record.names === 'object' && !Array.isArray(record.names)) {
-            Object.entries(record.names).forEach(([language, data]) => {
-                if (data && data.resource_markdown) {
-                    markdownsObj[language] = data.resource_markdown;
-                }
-            });
-        }
-        
-        setEditingResource({
-            id: record.id,
-            name: record.name,
-            product: record.product,
-            enabled: record.enabled,
-            url: record.url,
-            names: namesObj,
-            markdowns: markdownsObj,
-            type: record.type,
-            level: record.level
-        });
-        
-        setEditModalVisible(true);
     };
 
     const handleEditCancel = () => {
@@ -347,39 +361,43 @@ const ResourceList = () => {
         setCurrentMarkdown({});
     };
 
-    const handleMarkdownPreview = (record) => {
-        if (record.markdowns && typeof record.markdowns === 'object') {
-            const hasContent = Object.values(record.markdowns).some(content => 
-                content && content.trim() !== ''
-            );
-            
-            if (hasContent) {
-                setCurrentMarkdown(record.markdowns);
-                setViewMarkdown(true);
-                return;
-            }
+    const handleMarkdownPreview = async (record) => {
+        if (!record.is_markdown) {
+            setCurrentMarkdown({});
+            setViewMarkdown(true);
+            return;
         }
-        
-        if (record.names && typeof record.names === 'object') {
-            const markdownsByLanguage = {};
-            let hasContent = false;
+
+        try {
+            setLoading(true);
+            const response = await getMarkdown({ id: record.id });
             
-            Object.entries(record.names).forEach(([langId, data]) => {
-                if (data && data.resource_markdown) {
-                    markdownsByLanguage[langId] = data.resource_markdown;
-                    hasContent = true;
+            if (response.data.status === 0) {
+                const markdownData = response.data.data || [];
+                // Convert array format to object format: [{language, value}] => {language: value}
+                const markdownsByLanguage = {};
+                if (Array.isArray(markdownData)) {
+                    markdownData.forEach(item => {
+                        if (item.language && item.value !== undefined) {
+                            markdownsByLanguage[item.language] = item.value;
+                        }
+                    });
                 }
-            });
-            
-            if (hasContent) {
                 setCurrentMarkdown(markdownsByLanguage);
                 setViewMarkdown(true);
-                return;
+            } else {
+                message.error(response.data.message || t('fetchMarkdownError'));
+                setCurrentMarkdown({});
+                setViewMarkdown(true);
             }
+        } catch (error) {
+            console.error("Error fetching markdown:", error);
+            message.error(error.response?.data?.message || t('fetchMarkdownError'));
+            setCurrentMarkdown({});
+            setViewMarkdown(true);
+        } finally {
+            setLoading(false);
         }
-        
-        setCurrentMarkdown({});
-        setViewMarkdown(true);
     };
 
     const handleTableChange = (page, newPageSize) => {
@@ -433,6 +451,7 @@ const ResourceList = () => {
         {
             title: t('resourceName'),
             dataIndex: "name",
+            filteredValue: nameFilter ? [nameFilter] : null,
             filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                 <div style={{ padding: 8 }}>
                 <Input
@@ -441,8 +460,10 @@ const ResourceList = () => {
                     value={selectedKeys[0]}
                     onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                     onPressEnter={() => {
-                        setNameFilter(selectedKeys[0]);
-                        fetchData(pagination.current, pagination.pageSize, selectedKeys[0], productFilter);
+                        const query = selectedKeys[0] || "";
+                        setNameFilter(query);
+                        isManualFetch.current = true;
+                        fetchData(1, pagination.pageSize, query, productFilter);
                         confirm();
                     }}
                     style={{ width: 188, marginBottom: 8, display: 'block' }}
@@ -450,8 +471,10 @@ const ResourceList = () => {
                 <Button
                     type="primary"
                     onClick={() => {
-                        setNameFilter(selectedKeys[0]);
-                        fetchData(pagination.current, pagination.pageSize, selectedKeys[0], productFilter);
+                        const query = selectedKeys[0] || "";
+                        setNameFilter(query);
+                        isManualFetch.current = true;
+                        fetchData(1, pagination.pageSize, query, productFilter);
                         confirm();
                     }}
                     size="small"
@@ -463,7 +486,8 @@ const ResourceList = () => {
                     onClick={() => {
                         clearFilters();
                         setNameFilter("");
-                        fetchData(pagination.current, pagination.pageSize, "", productFilter);
+                        isManualFetch.current = true;
+                        fetchData(1, pagination.pageSize, "", productFilter);
                         confirm();
                     }}
                     size="small"
@@ -527,30 +551,17 @@ const ResourceList = () => {
         },
         {
             title: t('markdown'),
-            dataIndex: "markdowns",
+            dataIndex: "is_markdown",
             width: "5%",
             align: "center",
-            render: (markdowns, record) => {
-                const hasMarkdownsField = markdowns && 
-                    Object.values(markdowns).some(content => 
-                        content && content.trim() !== ''
-                    );
-                
-                const hasMarkdownsInNames = !hasMarkdownsField && 
-                    record.names && 
-                    Object.values(record.names).some(data => 
-                        data && data.resource_markdown && data.resource_markdown.trim() !== ''
-                    );
-                
-                const hasMarkdown = hasMarkdownsField || hasMarkdownsInNames;
-                
+            render: (is_markdown, record) => {
                 return (
                     <div style={{ 
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}>
-                        {hasMarkdown ? (
+                        {is_markdown ? (
                             <Tooltip title={t('viewMarkdown')}>
                                 <Button 
                                     type="link" 
@@ -600,6 +611,8 @@ const ResourceList = () => {
                 <Button 
                     type="link" 
                     onClick={() => handleEdit(record)}
+                    loading={loadingEdit}
+                    disabled={loadingEdit}
                 >
                     {t('edit')}
                 </Button>
@@ -661,10 +674,18 @@ const ResourceList = () => {
                     showSizeChanger: true,
                     pageSizeOptions: ['10', '20', '50', '100'],
                     showTotal: (total, range) => t('showingEntries', { start: range[0], end: range[1], total }),
-                    onChange: (page, newPageSize) => {
-                        handleTableChange(page, newPageSize);
-                    },
-                
+                }}
+                onChange={(paginationConfig, filters, sorter) => {
+                    // Skip if this was triggered by a manual fetch (search/reset)
+                    if (isManualFetch.current) {
+                        isManualFetch.current = false;
+                        return;
+                    }
+                    // Only handle pagination changes, ignore filter changes
+                    if (paginationConfig.current !== pagination.current || 
+                        paginationConfig.pageSize !== pagination.pageSize) {
+                        handleTableChange(paginationConfig.current, paginationConfig.pageSize);
+                    }
                 }}
                 loading={loading}
                 rowKey="id"
