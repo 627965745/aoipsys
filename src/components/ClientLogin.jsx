@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message } from "antd";
 import { useTranslation } from "react-i18next";
-import { login, getCaptcha } from "../api/api";
+import { login, getCaptcha, getLanguageCombo } from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { User, Lock, Eye, EyeOff, Globe, ChevronDown, ShieldCheck } from "lucide-react";
@@ -19,12 +19,37 @@ const ClientLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
+    const [languages, setLanguages] = useState([]);
+    const [loginImageLoaded, setLoginImageLoaded] = useState(false);
     const navigate = useNavigate();
     const { checkAuthStatus } = useAuth();
 
     useEffect(() => {
-        fetchCaptcha();
+        fetchLanguages();
+        // 在小屏幕下（没有左侧图片）直接加载验证码
+        const isSmallScreen = window.innerWidth < 1024;
+        if (isSmallScreen) {
+            fetchCaptcha();
+        }
     }, []);
+
+    // 等待左侧图片加载完成后再加载验证码
+    useEffect(() => {
+        if (loginImageLoaded) {
+            fetchCaptcha();
+        }
+    }, [loginImageLoaded]);
+
+    const fetchLanguages = async () => {
+        try {
+            const response = await getLanguageCombo();
+            if (response.data.status === 0) {
+                setLanguages(response.data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching languages:", error);
+        }
+    };
 
     const fetchCaptcha = async () => {
         try {
@@ -64,10 +89,8 @@ const ClientLogin = () => {
     };
 
     const getCurrentLanguageLabel = () => {
-        const lang = i18n.language;
-        if (lang === "zh_CN") return "中文";
-        if (lang === "es_ES") return "Español";
-        return "English";
+        const currentLanguage = languages.find(lang => lang.id === i18n.language);
+        return currentLanguage?.name || i18n.language;
     };
 
     const changeLanguage = (lang) => {
@@ -115,35 +138,22 @@ const ClientLogin = () => {
                                 <ChevronDown className={`h-4 w-4 text-[#00d3f2] transition-transform duration-300 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
                             </button>
 
-                            {/* Dropdown Menu */}
-                            {showLanguageDropdown && (
-                                <div className="absolute right-0 mt-2 w-40 bg-[#1a1f3a] border border-[rgba(0,211,242,0.3)] rounded-lg shadow-2xl overflow-hidden z-10">
-                                    <button
-                                        onClick={() => changeLanguage('en_GB')}
-                                        className={`w-full px-4 py-3 text-left hover:bg-[rgba(0,211,242,0.1)] transition-colors ${
-                                            i18n.language === 'en_GB' ? 'bg-[rgba(0,211,242,0.2)] text-[#00d3f2]' : 'text-white'
-                                        }`}
-                                    >
-                                        English
-                                    </button>
-                                    <button
-                                        onClick={() => changeLanguage('zh_CN')}
-                                        className={`w-full px-4 py-3 text-left hover:bg-[rgba(0,211,242,0.1)] transition-colors ${
-                                            i18n.language === 'zh_CN' ? 'bg-[rgba(0,211,242,0.2)] text-[#00d3f2]' : 'text-white'
-                                        }`}
-                                    >
-                                        中文
-                                    </button>
-                                    <button
-                                        onClick={() => changeLanguage('es_ES')}
-                                        className={`w-full px-4 py-3 text-left hover:bg-[rgba(0,211,242,0.1)] transition-colors ${
-                                            i18n.language === 'es_ES' ? 'bg-[rgba(0,211,242,0.2)] text-[#00d3f2]' : 'text-white'
-                                        }`}
-                                    >
-                                        Español
-                                    </button>
-                                </div>
-                            )}
+{/* Dropdown Menu */}
+                                            {showLanguageDropdown && (
+                                                <div className="absolute right-0 mt-2 w-40 bg-[#1a1f3a] border border-[rgba(0,211,242,0.3)] rounded-lg shadow-2xl overflow-hidden z-10">
+                                                    {languages.map((lang) => (
+                                                        <button
+                                                            key={lang.id}
+                                                            onClick={() => changeLanguage(lang.id)}
+                                                            className={`w-full px-4 py-3 text-left hover:bg-[rgba(0,211,242,0.1)] transition-colors ${
+                                                                i18n.language === lang.id ? 'bg-[rgba(0,211,242,0.2)] text-[#00d3f2]' : 'text-white'
+                                                            }`}
+                                                        >
+                                                            {lang.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                         </div>
                     </div>
                 </div>
@@ -159,6 +169,7 @@ const ClientLogin = () => {
                         src={loginImage}
                         alt="Digisynthetic Documentation"
                         className="absolute inset-0 w-full h-full object-cover"
+                        onLoad={() => setLoginImageLoaded(true)}
                     />
                 </div>
 
