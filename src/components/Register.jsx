@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import { register, getCaptcha } from "../api/api";
 import { User, Lock, Eye, EyeOff, Globe, ChevronDown, Building, Briefcase, Phone, Mail } from 'lucide-react';
-import loginImage from "../assets/loginImage.png";
+import loginImage from "../assets/loginImage.webp";
 import logoImage from "../assets/62dec083aa150333bea0f372c3e84e30062b9518.png";
 import ravennaLogo from "../assets/ba3babc66b385e025079f4da0dc333957d991d49.png";
 import { DigisyntheticLogoSmall, DigisyntheticLogoLarge, SoundNetLogo } from "./LogoSvg";

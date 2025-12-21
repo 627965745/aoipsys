@@ -488,7 +488,7 @@ const Home = () => {
 
                 {/* Navigation Menu */}
                 <nav className="flex-1 p-4 space-y-1">
-                    <button
+                    {/* <button
                         onClick={() => setActiveMenu("home")}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 ${
                             activeMenu === "home"
@@ -498,7 +498,7 @@ const Home = () => {
                     >
                         <HomeIcon className="h-5 w-5" />
                         <span>{t.home || "Home"}</span>
-                    </button>
+                    </button> */}
 
                     <button
                         onClick={() => setActiveMenu("resources-docs")}
@@ -512,9 +512,9 @@ const Home = () => {
                             <FileText className="h-5 w-5" />
                             <span>{t("resourcesDocs")}</span>
                         </div>
-                        <span className="text-xs bg-[#0369a1] text-white px-2 py-0.5 rounded font-bold">
+                        {/* <span className="text-xs bg-[#0369a1] text-white px-2 py-0.5 rounded font-bold">
                             NEW
-                        </span>
+                        </span> */}
                     </button>
                 </nav>
 
@@ -546,13 +546,13 @@ const Home = () => {
                         <span>{t("changePassword")}</span>
                     </button>
 
-                    <button
+                    {/* <button
                         onClick={() => {}}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1f2937] rounded-lg transition-all duration-300"
                     >
                         <Settings className="h-5 w-5" />
                         <span>{t("settings")}</span>
-                    </button>
+                    </button> */}
 
                     <button
                         onClick={handleLogout}
