@@ -518,112 +518,6 @@ const Home = () => {
                     </button>
                 </nav>
 
-                {/* Bottom Menu & User Settings */}
-                <div className="p-4 border-t border-[#e5e7eb] space-y-1">
-                    {/* Email Subscription Switch */}
-                    <div className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-[#6b7280] rounded-lg">
-                        <div className="flex items-center gap-3">
-                            <Mail className="h-5 w-5" />
-                            <span className="text-sm">
-                                {t("subscribeToEmails")}
-                            </span>
-                        </div>
-                        <Switch
-                            size="small"
-                            checked={isSubscribed}
-                            loading={subscriptionLoading}
-                            onChange={handleSubscriptionToggle}
-                        />
-                    </div>
-
-                    <button
-                        onClick={() =>
-                            navigate("/reset-password?source=client")
-                        }
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1f2937] rounded-lg transition-all duration-300"
-                    >
-                        <Lock className="h-5 w-5" />
-                        <span>{t("changePassword")}</span>
-                    </button>
-
-                    {/* <button
-                        onClick={() => {}}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1f2937] rounded-lg transition-all duration-300"
-                    >
-                        <Settings className="h-5 w-5" />
-                        <span>{t("settings")}</span>
-                    </button> */}
-
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[#dc2626] hover:bg-[#fee2e2] hover:text-[#991b1b] rounded-lg transition-all duration-300"
-                    >
-                        <LogOut className="h-5 w-5" />
-                        <span>{t("logout")}</span>
-                    </button>
-
-                    {/* Language Selector */}
-                    <div className="relative pt-2">
-                        <button
-                            onClick={() =>
-                                setShowLanguageDropdown(!showLanguageDropdown)
-                            }
-                            className="w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border border-[#d1d5db] rounded-lg text-[#1f2937] hover:border-[#0369a1] transition-all duration-300"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-[#0369a1]" />
-                                <span className="text-sm">
-                                    {getCurrentLanguageLabel()}
-                                </span>
-                            </div>
-                            <ChevronDown
-                                className={`h-4 w-4 text-[#0369a1] transition-transform duration-300 ${
-                                    showLanguageDropdown ? "rotate-180" : ""
-                                }`}
-                            />
-                        </button>
-
-                        {showLanguageDropdown && (
-                            <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-[#d1d5db] rounded-lg shadow-xl overflow-hidden z-20">
-                                {languages.map((lang) => (
-                                    <button
-                                        key={lang.id}
-                                        onClick={() => {
-                                            i18n.changeLanguage(lang.id);
-                                            setShowLanguageDropdown(false);
-                                        }}
-                                        className={`w-full px-4 py-3 text-left hover:bg-[#f3f4f6] transition-colors text-sm ${
-                                            i18n.language === lang.id
-                                                ? "bg-[#e0f2fe] text-[#0369a1]"
-                                                : "text-[#1f2937]"
-                                        }`}
-                                    >
-                                        {lang.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* User Profile Mini */}
-                    {user && (
-                        <div className="mt-4 pt-4 border-t border-[#e5e7eb] flex items-center gap-3 px-2">
-                            <div className="w-8 h-8 rounded-full bg-[#B8BE14] flex items-center justify-center text-white font-bold text-xs">
-                                {user.name
-                                    ? user.name.slice(0, 2).toUpperCase()
-                                    : "U"}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-[#1f2937] truncate">
-                                    {user.name}
-                                </p>
-                                <p className="text-xs text-[#6b7280] truncate">
-                                    {user.email}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
             </aside>
 
             {/* --- Main Content --- */}
@@ -638,112 +532,200 @@ const Home = () => {
 
                 {/* --- Top Header Section --- */}
                 <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-white">
-                    <h1 className="text-[#1f2937] text-xl font-semibold mb-1 mt-12 lg:mt-0 flex items-center gap-2">
-                        {t("resourcesDocs")}
-                        {selectedCategory && (
-                            <>
-                                <ChevronRight className="h-4 w-4 text-[#9ca3af]" />
-                                <span className="text-[#0369a1]">
-                                    {selectedCategory.name}
-                                </span>
-                            </>
-                        )}
-                        {selectedProduct && (
-                            <>
-                                <ChevronRight className="h-4 w-4 text-[#9ca3af]" />
-                                <span className="text-[#6b7280] text-base font-normal">
-                                    {selectedProduct.name}
-                                </span>
-                            </>
-                        )}
-                    </h1>
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                        <div className="flex-1">
+                            <h1 className="text-[#1f2937] text-xl font-semibold mb-1 mt-12 lg:mt-0 flex items-center gap-2">
+                                {t("resourcesDocs")}
+                                {selectedCategory && (
+                                    <>
+                                        <ChevronRight className="h-4 w-4 text-[#9ca3af]" />
+                                        <span className="text-[#0369a1]">
+                                            {selectedCategory.name}
+                                        </span>
+                                    </>
+                                )}
+                                {selectedProduct && (
+                                    <>
+                                        <ChevronRight className="h-4 w-4 text-[#9ca3af]" />
+                                        <span className="text-[#6b7280] text-base font-normal">
+                                            {selectedProduct.name}
+                                        </span>
+                                    </>
+                                )}
+                            </h1>
 
-                    {/* Category Tabs */}
-                    <div className="mt-6">
-                        <label className="text-[#374151] font-medium mb-3 block text-sm uppercase tracking-wide">
-                            {t("category")}:
-                        </label>
-                        <div className="flex gap-2 flex-wrap">
-                            {categories.map((category, index) => (
-                                <button
-                                    key={category.id}
-                                    onClick={() =>
-                                        handleCategoryClick(category)
-                                    }
-                                    className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 border ${
-                                        selectedCategory?.id === category.id
-                                            ? "bg-[#645D21] text-white border-[#645D21] shadow-md"
-                                            : category.highlighted === 1
-                                            ? "bg-[#B8BE14] text-white border-[#B8BE14] hover:bg-[#a3aa12]"
-                                            : "bg-white text-[#6b7280] border-[#d1d5db] hover:border-[#B8BE14] hover:bg-[#B8BE14] hover:text-white"
-                                    }`}
-                                >
-                                    {category.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                            {/* Category Tabs */}
+                            <div className="mt-6">
+                                <label className="text-[#374151] font-medium mb-3 block text-sm uppercase tracking-wide">
+                                    {t("category")}:
+                                </label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {categories.map((category, index) => (
+                                        <button
+                                            key={category.id}
+                                            onClick={() =>
+                                                handleCategoryClick(category)
+                                            }
+                                            className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 border ${
+                                                selectedCategory?.id === category.id
+                                                    ? "bg-[#645D21] text-white border-[#645D21] shadow-md"
+                                                    : category.highlighted === 1
+                                                    ? "bg-[#B8BE14] text-white border-[#B8BE14] hover:bg-[#a3aa12]"
+                                                    : "bg-white text-[#6b7280] border-[#d1d5db] hover:border-[#B8BE14] hover:bg-[#B8BE14] hover:text-white"
+                                            }`}
+                                        >
+                                            {category.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                    {/* Product Selection Section */}
-                    <div className="mt-6">
-                        <label className="text-[#374151] font-medium mb-3 block text-sm uppercase tracking-wide">
-                            {t("product")}:
-                        </label>
-                        <div className="flex gap-2 flex-wrap">
-                            {!selectedCategory ? (
-                                <p className="text-[#9ca3af] italic text-sm">
-                                    {t("pleaseChooseCategory") ||
-                                        "Please choose a category..."}
-                                </p>
-                            ) : getFilteredProducts().length === 0 ? (
-                                <p className="text-[#9ca3af] italic text-sm">
-                                    {t("noProductsAvailable") ||
-                                        "No products available"}
-                                </p>
-                            ) : (
-                                getFilteredProducts().map((product) => (
-                                    <button
-                                        key={product.id}
-                                        onClick={() =>
-                                            handleProductClick(product)
+                            {/* Product Selection Section */}
+                            <div className="mt-6">
+                                <label className="text-[#374151] font-medium mb-3 block text-sm uppercase tracking-wide">
+                                    {t("product")}:
+                                </label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {!selectedCategory ? (
+                                        <p className="text-[#9ca3af] italic text-sm">
+                                            {t("pleaseChooseCategory") ||
+                                                "Please choose a category..."}
+                                        </p>
+                                    ) : getFilteredProducts().length === 0 ? (
+                                        <p className="text-[#9ca3af] italic text-sm">
+                                            {t("noProductsAvailable") ||
+                                                "No products available"}
+                                        </p>
+                                    ) : (
+                                        getFilteredProducts().map((product) => (
+                                            <button
+                                                key={product.id}
+                                                onClick={() =>
+                                                    handleProductClick(product)
+                                                }
+                                                className={`px-3 py-1.5 rounded-md text-sm transition-all duration-300 border ${
+                                                    selectedProduct?.id === product.id
+                                                        ? "bg-[#e0f2fe] text-[#0369a1] border-[#bae6fd] font-medium"
+                                                        : "bg-white text-[#6b7280] border-[#e5e7eb] hover:border-[#0369a1] hover:text-[#0369a1]"
+                                                }`}
+                                            >
+                                                {product.name}
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="mt-6 flex gap-3 max-w-3xl">
+                                <div className="flex-1 relative">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={(e) =>
+                                            e.key === "Enter" &&
+                                            handleSearch(searchQuery)
                                         }
-                                        className={`px-3 py-1.5 rounded-md text-sm transition-all duration-300 border ${
-                                            selectedProduct?.id === product.id
-                                                ? "bg-[#e0f2fe] text-[#0369a1] border-[#bae6fd] font-medium"
-                                                : "bg-white text-[#6b7280] border-[#e5e7eb] hover:border-[#0369a1] hover:text-[#0369a1]"
+                                        placeholder={
+                                            t("searchPlaceholder") ||
+                                            "Search firmware data..."
+                                        }
+                                        className="w-full pl-4 pr-4 py-3 bg-white border border-[#d1d5db] rounded-lg text-[#1f2937] placeholder-[#9ca3af] focus:outline-none focus:border-[#B8BE14] focus:ring-2 focus:ring-[#B8BE14] focus:ring-opacity-20 transition-all duration-300"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => handleSearch(searchQuery)}
+                                    className="px-6 py-3 bg-[#B8BE14] text-white rounded-lg hover:bg-[#a3aa12] focus:outline-none transition-all duration-300 shadow-md flex items-center justify-center"
+                                >
+                                    <Search className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Quick Actions (moved from sidebar) */}
+                        <div className="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e5e7eb] rounded-full shadow-sm">
+                                <Mail className="h-4 w-4 text-[#6b7280]" />
+                                <span className="text-sm text-[#374151]">{t("subscribeToEmails")}</span>
+                                <Switch
+                                    size="small"
+                                    checked={isSubscribed}
+                                    loading={subscriptionLoading}
+                                    onChange={handleSubscriptionToggle}
+                                />
+                            </div>
+
+                            <button
+                                onClick={() => navigate("/reset-password?source=client")}
+                                className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e5e7eb] rounded-full text-[#374151] hover:bg-[#f3f4f6] transition-all duration-200 shadow-sm"
+                            >
+                                <Lock className="h-4 w-4" />
+                                <span className="text-sm">{t("changePassword")}</span>
+                            </button>
+
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 px-3 py-2 bg-white border border-[#fee2e2] rounded-full text-[#dc2626] hover:bg-[#fee2e2] transition-all duration-200 shadow-sm"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span className="text-sm">{t("logout")}</span>
+                            </button>
+
+                            <div className="relative">
+                                <button
+                                    onClick={() =>
+                                        setShowLanguageDropdown(!showLanguageDropdown)
+                                    }
+                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-[#d1d5db] rounded-full text-[#1f2937] hover:border-[#0369a1] transition-all duration-200 shadow-sm"
+                                >
+                                    <Globe className="h-4 w-4 text-[#0369a1]" />
+                                    <span className="text-sm">
+                                        {getCurrentLanguageLabel()}
+                                    </span>
+                                    <ChevronDown
+                                        className={`h-4 w-4 text-[#0369a1] transition-transform duration-200 ${
+                                            showLanguageDropdown ? "rotate-180" : ""
                                         }`}
-                                    >
-                                        {product.name}
-                                    </button>
-                                ))
+                                    />
+                                </button>
+
+                                {showLanguageDropdown && (
+                                    <div className="absolute right-0 top-full mt-2 bg-white border border-[#d1d5db] rounded-lg shadow-xl overflow-hidden z-20 w-48">
+                                        {languages.map((lang) => (
+                                            <button
+                                                key={lang.id}
+                                                onClick={() => {
+                                                    i18n.changeLanguage(lang.id);
+                                                    setShowLanguageDropdown(false);
+                                                }}
+                                                className={`w-full px-4 py-3 text-left hover:bg-[#f3f4f6] transition-colors text-sm ${
+                                                    i18n.language === lang.id
+                                                        ? "bg-[#e0f2fe] text-[#0369a1]"
+                                                        : "text-[#1f2937]"
+                                                }`}
+                                            >
+                                                {lang.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {user && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e5e7eb] rounded-full shadow-sm">
+                                    <div className="w-8 h-8 rounded-full bg-[#B8BE14] flex items-center justify-center text-white font-bold text-xs">
+                                        {user.name
+                                            ? user.name.slice(0, 2).toUpperCase()
+                                            : "U"}
+                                    </div>
+                                    <div className="flex flex-col items-start leading-tight">
+                                        <span className="text-sm text-[#1f2937]">{user.name}</span>
+                                        <span className="text-xs text-[#6b7280] max-w-[140px] truncate">{user.email}</span>
+                                    </div>
+                                </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="mt-6 flex gap-3 max-w-3xl">
-                        <div className="flex-1 relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) =>
-                                    e.key === "Enter" &&
-                                    handleSearch(searchQuery)
-                                }
-                                placeholder={
-                                    t("searchPlaceholder") ||
-                                    "Search firmware data..."
-                                }
-                                className="w-full pl-4 pr-4 py-3 bg-white border border-[#d1d5db] rounded-lg text-[#1f2937] placeholder-[#9ca3af] focus:outline-none focus:border-[#B8BE14] focus:ring-2 focus:ring-[#B8BE14] focus:ring-opacity-20 transition-all duration-300"
-                            />
-                        </div>
-                        <button
-                            onClick={() => handleSearch(searchQuery)}
-                            className="px-6 py-3 bg-[#B8BE14] text-white rounded-lg hover:bg-[#a3aa12] focus:outline-none transition-all duration-300 shadow-md flex items-center justify-center"
-                        >
-                            <Search className="h-5 w-5" />
-                        </button>
                     </div>
                 </div>
 
