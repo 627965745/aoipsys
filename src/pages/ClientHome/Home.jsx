@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { message, Modal, Button, Switch, Tooltip } from "antd";
 import { useTranslation } from "react-i18next";
 import {
@@ -77,7 +77,10 @@ const Home = () => {
     const [activeMenu, setActiveMenu] = useState("resources-docs");
     const [languages, setLanguages] = useState([]);
     const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const [isSubscribed, setIsSubscribed] = useState(false);
+    const languageMenuRef = useRef(null);
+    const userMenuRef = useRef(null);
     const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
     // --- API Effects ---
@@ -101,6 +104,22 @@ const Home = () => {
             setCurrentPage(1);
         }
     }, [selectedProduct, selectedCategory]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setShowUserMenu(false);
+            }
+            if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
+                setShowLanguageDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     // --- Data Fetching Functions ---
     const fetchConditions = async () => {
@@ -209,6 +228,7 @@ const Home = () => {
     };
 
     const handleLogout = async () => {
+        setShowUserMenu(false);
         try {
             const response = await logout();
             if (response.data.status === 0) {
@@ -522,19 +542,151 @@ const Home = () => {
 
             {/* --- Main Content --- */}
             <main className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
-                {/* Mobile Menu Button */}
-                <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="lg:hidden fixed top-4 left-4 z-30 bg-white p-2 rounded-lg shadow-md border border-[#e5e7eb] text-[#1f2937]"
-                >
-                    <Menu className="h-5 w-5" />
-                </button>
+                <header className="sticky top-0 z-40 border-b border-[#e5e7eb] bg-white shadow-sm">
+                    <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="lg:hidden rounded-lg border border-[#d1d5db] bg-white p-2 text-[#1f2937] shadow-sm transition hover:border-[#0369a1]"
+                            >
+                                <Menu className="h-5 w-5" />
+                            </button>
+                            <Logo />
+                        </div>
 
+                        <div className="flex items-center gap-3">
+                            <div ref={languageMenuRef} className="relative">
+                                <button
+                                    onClick={() =>
+                                        setShowLanguageDropdown((prev) => !prev)
+                                    }
+                                    className="flex items-center gap-2 rounded-full border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#1f2937] shadow-sm transition hover:border-[#0369a1]"
+                                >
+                                    <Globe className="h-4 w-4 text-[#0369a1]" />
+                                    <span>{getCurrentLanguageLabel()}</span>
+                                    <ChevronDown
+                                        className={`h-4 w-4 text-[#0369a1] transition-transform ${
+                                            showLanguageDropdown ? "rotate-180" : ""
+                                        }`}
+                                    />
+                                </button>
+                                {showLanguageDropdown && (
+                                    <div className="absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white shadow-xl">
+                                        {languages.map((lang) => (
+                                            <button
+                                                key={lang.id}
+                                                onClick={() => {
+                                                    i18n.changeLanguage(lang.id);
+                                                    setShowLanguageDropdown(false);
+                                                }}
+                                                className={`w-full px-4 py-3 text-left text-sm transition-colors ${
+                                                    i18n.language === lang.id
+                                                        ? "bg-[#e0f2fe] text-[#0369a1]"
+                                                        : "text-[#1f2937] hover:bg-[#f3f4f6]"
+                                                }`}
+                                            >
+                                                {lang.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {user ? (
+                                <div ref={userMenuRef} className="relative">
+                                    <button
+                                        onClick={() =>
+                                            setShowUserMenu((prev) => !prev)
+                                        }
+                                        className="flex items-center gap-2 rounded-full border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#1f2937] shadow-sm transition hover:border-[#0369a1]"
+                                    >
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#B8BE14] text-xs font-bold uppercase text-white">
+                                            {user.name
+                                                ? user.name.slice(0, 2)
+                                                : "U"}
+                                        </div>
+                                        <span className="whitespace-nowrap">
+                                            {user.name || "User"}
+                                        </span>
+                                        <ChevronDown
+                                            className={`h-4 w-4 text-[#0369a1] transition-transform ${
+                                                showUserMenu ? "rotate-180" : ""
+                                            }`}
+                                        />
+                                    </button>
+                                    {showUserMenu && (
+                                        <div className="absolute right-0 top-full z-40 mt-2 w-72 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-xl">
+                                            <div className="flex items-center gap-3 border-b border-[#f3f4f6] pb-3">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#B8BE14] text-sm font-semibold text-white uppercase">
+                                                    {user.name
+                                                        ? user.name
+                                                              .slice(0, 2)
+                                                              .toUpperCase()
+                                                        : "U"}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-[#1f2937]">
+                                                        {user.name}
+                                                    </p>
+                                                    <p className="text-xs text-[#6b7280]">
+                                                        {user.email}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 space-y-2">
+                                                <div className="flex items-center justify-between rounded-xl bg-[#f9fafb] px-3 py-2">
+                                                    <span className="text-sm text-[#374151]">
+                                                        {t("subscribeToEmails")}
+                                                    </span>
+                                                    <Switch
+                                                        size="small"
+                                                        checked={isSubscribed}
+                                                        loading={subscriptionLoading}
+                                                        onChange={
+                                                            handleSubscriptionToggle
+                                                        }
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowUserMenu(false);
+                                                        navigate(
+                                                            "/reset-password?source=client"
+                                                        );
+                                                    }}
+                                                    className="w-full rounded-xl border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#1f2937] transition hover:border-[#0369a1]"
+                                                >
+                                                    {t("changePassword")}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowUserMenu(false);
+                                                        handleLogout();
+                                                    }}
+                                                    className="w-full rounded-xl border border-[#fee2e2] bg-white px-3 py-2 text-sm text-[#dc2626] transition hover:bg-[#fee2e2]"
+                                                >
+                                                    {t("logout")}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => navigate("/login")}
+                                    className="rounded-full border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#1f2937] shadow-sm transition hover:border-[#0369a1]"
+                                >
+                                    {t("login")}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </header>
                 {/* --- Top Header Section --- */}
                 <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-white">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                    <div className="flex flex-col gap-6">
                         <div className="flex-1">
-                            <h1 className="text-[#1f2937] text-xl font-semibold mb-1 mt-12 lg:mt-0 flex items-center gap-2">
+                            <h1 className="text-[#1f2937] text-xl font-semibold mb-1 flex items-center gap-2">
                                 {t("resourcesDocs")}
                                 {selectedCategory && (
                                     <>
@@ -643,89 +795,6 @@ const Home = () => {
                             </div>
                         </div>
 
-                        {/* Quick Actions (moved from sidebar) */}
-                        <div className="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
-                            <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e5e7eb] rounded-full shadow-sm">
-                                <Mail className="h-4 w-4 text-[#6b7280]" />
-                                <span className="text-sm text-[#374151]">{t("subscribeToEmails")}</span>
-                                <Switch
-                                    size="small"
-                                    checked={isSubscribed}
-                                    loading={subscriptionLoading}
-                                    onChange={handleSubscriptionToggle}
-                                />
-                            </div>
-
-                            <button
-                                onClick={() => navigate("/reset-password?source=client")}
-                                className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e5e7eb] rounded-full text-[#374151] hover:bg-[#f3f4f6] transition-all duration-200 shadow-sm"
-                            >
-                                <Lock className="h-4 w-4" />
-                                <span className="text-sm">{t("changePassword")}</span>
-                            </button>
-
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center gap-2 px-3 py-2 bg-white border border-[#fee2e2] rounded-full text-[#dc2626] hover:bg-[#fee2e2] transition-all duration-200 shadow-sm"
-                            >
-                                <LogOut className="h-4 w-4" />
-                                <span className="text-sm">{t("logout")}</span>
-                            </button>
-
-                            <div className="relative">
-                                <button
-                                    onClick={() =>
-                                        setShowLanguageDropdown(!showLanguageDropdown)
-                                    }
-                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-[#d1d5db] rounded-full text-[#1f2937] hover:border-[#0369a1] transition-all duration-200 shadow-sm"
-                                >
-                                    <Globe className="h-4 w-4 text-[#0369a1]" />
-                                    <span className="text-sm">
-                                        {getCurrentLanguageLabel()}
-                                    </span>
-                                    <ChevronDown
-                                        className={`h-4 w-4 text-[#0369a1] transition-transform duration-200 ${
-                                            showLanguageDropdown ? "rotate-180" : ""
-                                        }`}
-                                    />
-                                </button>
-
-                                {showLanguageDropdown && (
-                                    <div className="absolute right-0 top-full mt-2 bg-white border border-[#d1d5db] rounded-lg shadow-xl overflow-hidden z-20 w-48">
-                                        {languages.map((lang) => (
-                                            <button
-                                                key={lang.id}
-                                                onClick={() => {
-                                                    i18n.changeLanguage(lang.id);
-                                                    setShowLanguageDropdown(false);
-                                                }}
-                                                className={`w-full px-4 py-3 text-left hover:bg-[#f3f4f6] transition-colors text-sm ${
-                                                    i18n.language === lang.id
-                                                        ? "bg-[#e0f2fe] text-[#0369a1]"
-                                                        : "text-[#1f2937]"
-                                                }`}
-                                            >
-                                                {lang.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {user && (
-                                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e5e7eb] rounded-full shadow-sm">
-                                    <div className="w-8 h-8 rounded-full bg-[#B8BE14] flex items-center justify-center text-white font-bold text-xs">
-                                        {user.name
-                                            ? user.name.slice(0, 2).toUpperCase()
-                                            : "U"}
-                                    </div>
-                                    <div className="flex flex-col items-start leading-tight">
-                                        <span className="text-sm text-[#1f2937]">{user.name}</span>
-                                        <span className="text-xs text-[#6b7280] max-w-[140px] truncate">{user.email}</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </div>
 
