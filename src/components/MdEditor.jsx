@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@toast-ui/react-editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { uploadFile } from '../api/api';
 
 const MdEditor = ({ content, onChange, onCancel }) => {
     const editorRef = React.useRef();
@@ -72,6 +73,27 @@ const MdEditor = ({ content, onChange, onCancel }) => {
                     ['code', 'codeblock'],
                     ['scrollSync']
                 ]}
+                hooks={{
+                    addImageBlobHook: async (blob, callback) => {
+                        const formData = new FormData();
+                        formData.append('file', blob);
+
+                        try {
+                            const response = await uploadFile(formData);
+                            
+                            if (response.data.status === 0) {
+                                const filename = response.data.data;
+                                const url = `/uploads/${filename}`;
+                                callback(url, blob.name);
+                            } else {
+                                message.error(response.data.message || '上传图片失败');
+                            }
+                        } catch (error) {
+                            console.error("Image upload error:", error);
+                            message.error(error.response?.data?.message || '上传图片出错');
+                        }
+                    }
+                }}
             />
             <style jsx>{`
                 .markdown-editor {
