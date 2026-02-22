@@ -1,7 +1,7 @@
 import { Button, Form, Input, message, Modal, Checkbox } from "antd";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { register, getCaptcha } from "../api/api";
 import { User, Lock, Eye, EyeOff, Globe, ChevronDown, Building, Briefcase, Phone, Mail } from 'lucide-react';
 import loginImage from "../assets/loginImage.webp";
@@ -11,7 +11,7 @@ import { DigisyntheticLogoSmall, DigisyntheticLogoLarge, SoundNetLogo } from "./
 
 const Register = () => {
     const { t, i18n } = useTranslation();
-    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [captchaUrl, setCaptchaUrl] = useState("");
@@ -22,6 +22,14 @@ const Register = () => {
     useEffect(() => {
         fetchCaptcha();
     }, []);
+
+    // Effect to handle dynamic URL changes
+    useEffect(() => {
+        const email = searchParams.get('email');
+        if (email) {
+            form.setFieldsValue({ email });
+        }
+    }, [searchParams, form]);
 
     const fetchCaptcha = async () => {
         try {
@@ -201,24 +209,28 @@ const Register = () => {
                                 autoComplete="off"
                                 layout="vertical"
                                 className="space-y-5"
+                                initialValues={{
+                                    email: searchParams.get('email'),
+                                    emailSubscription: true
+                                }}
                             >
                                 {/* Email Field */}
-                                <Form.Item
-                                    name="email"
-                                    rules={[
-                                        { required: true, message: t("emailError") },
-                                        { type: "email", message: t("emailError") },
-                                    ]}
-                                    className="mb-0"
-                                >
-                                    <div>
-                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                            <span className="text-red-400">* </span>{t("email")}
-                                        </label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                <Mail className="h-5 w-5 text-[#00d3f2]" />
-                                            </div>
+                                <div className="mb-0">
+                                    <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                        <span className="text-red-400">* </span>{t("email")}
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                            <Mail className="h-5 w-5 text-[#00d3f2]" />
+                                        </div>
+                                        <Form.Item
+                                            name="email"
+                                            rules={[
+                                                { required: true, message: t("emailError") },
+                                                { type: "email", message: t("emailError") },
+                                            ]}
+                                            className="mb-0"
+                                        >
                                             <Input
                                                 placeholder={t("emailPlaceholder")}
                                                 className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -228,29 +240,29 @@ const Register = () => {
                                                     height: '48px'
                                                 }}
                                             />
-                                        </div>
+                                        </Form.Item>
                                     </div>
-                                </Form.Item>
+                                </div>
 
                                 {/* Password and Confirm Password Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {/* Password Field */}
-                                    <Form.Item
-                                        name="password"
-                                        rules={[
-                                            { required: true, message: t("passwordError") },
-                                            { min: 8, max: 32, message: t("passwordLengthError") },
-                                        ]}
-                                        className="mb-0"
-                                    >
-                                        <div>
-                                            <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                                <span className="text-red-400">* </span>{t("password")}
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <Lock className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                    <div className="mb-0">
+                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                            <span className="text-red-400">* </span>{t("password")}
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <Lock className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="password"
+                                                rules={[
+                                                    { required: true, message: t("passwordError") },
+                                                    { min: 8, max: 32, message: t("passwordLengthError") },
+                                                ]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     type={showPassword ? 'text' : 'password'}
                                                     placeholder={t("passwordPlaceholder")}
@@ -261,42 +273,43 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#00d3f2] hover:text-[#00b8db] transition-colors z-10"
-                                                >
-                                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                                </button>
-                                            </div>
+                                            </Form.Item>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#00d3f2] hover:text-[#00b8db] transition-colors z-20"
+                                                style={{ height: '48px', top: '0' }}
+                                            >
+                                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                            </button>
                                         </div>
-                                    </Form.Item>
+                                    </div>
 
                                     {/* Confirm Password Field */}
-                                    <Form.Item
-                                        name="confirmPassword"
-                                        dependencies={["password"]}
-                                        rules={[
-                                            { required: true, message: t("confirmPasswordError") },
-                                            ({ getFieldValue }) => ({
-                                                validator(_, value) {
-                                                    if (!value || getFieldValue("password") === value) {
-                                                        return Promise.resolve();
-                                                    }
-                                                    return Promise.reject(new Error(t("passwordsNotMatch")));
-                                                },
-                                            }),
-                                        ]}
-                                        className="mb-0"
-                                    >
-                                        <div>
-                                            <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                                <span className="text-red-400">* </span>{t("confirmPassword")}
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <Lock className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                    <div className="mb-0">
+                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                            <span className="text-red-400">* </span>{t("confirmPassword")}
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <Lock className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="confirmPassword"
+                                                dependencies={["password"]}
+                                                rules={[
+                                                    { required: true, message: t("confirmPasswordError") },
+                                                    ({ getFieldValue }) => ({
+                                                        validator(_, value) {
+                                                            if (!value || getFieldValue("password") === value) {
+                                                                return Promise.resolve();
+                                                            }
+                                                            return Promise.reject(new Error(t("passwordsNotMatch")));
+                                                        },
+                                                    }),
+                                                ]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     type={showConfirmPassword ? 'text' : 'password'}
                                                     placeholder={t("confirmPasswordPlaceholder")}
@@ -307,34 +320,35 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#00d3f2] hover:text-[#00b8db] transition-colors z-10"
-                                                >
-                                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                                </button>
-                                            </div>
+                                            </Form.Item>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#00d3f2] hover:text-[#00b8db] transition-colors z-20"
+                                                style={{ height: '48px', top: '0' }}
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                            </button>
                                         </div>
-                                    </Form.Item>
+                                    </div>
                                 </div>
 
                                 {/* Name and Industry Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {/* Name Field */}
-                                    <Form.Item
-                                        name="name"
-                                        rules={[{ required: true, message: t("nameError") }]}
-                                        className="mb-0"
-                                    >
-                                        <div>
-                                            <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                                <span className="text-red-400">* </span>{t("name")}
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <User className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                    <div className="mb-0">
+                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                            <span className="text-red-400">* </span>{t("name")}
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <User className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="name"
+                                                rules={[{ required: true, message: t("nameError") }]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     placeholder={t("namePlaceholder")}
                                                     className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -344,24 +358,24 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                            </div>
+                                            </Form.Item>
                                         </div>
-                                    </Form.Item>
+                                    </div>
 
                                     {/* Industry Field */}
-                                    <Form.Item
-                                        name="industry"
-                                        rules={[{ required: true, message: t("industryError") }]}
-                                        className="mb-0"
-                                    >
-                                        <div>
-                                            <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                                <span className="text-red-400">* </span>{t("industry")}
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <Building className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                    <div className="mb-0">
+                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                            <span className="text-red-400">* </span>{t("industry")}
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <Building className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="industry"
+                                                rules={[{ required: true, message: t("industryError") }]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     placeholder={t("industryPlaceholder")}
                                                     className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -371,27 +385,27 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                            </div>
+                                            </Form.Item>
                                         </div>
-                                    </Form.Item>
+                                    </div>
                                 </div>
 
                                 {/* Company and Position Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {/* Company Field */}
-                                    <Form.Item
-                                        name="company"
-                                        rules={[{ required: true, message: t("companyError") }]}
-                                        className="mb-0"
-                                    >
-                                        <div>
-                                            <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                                <span className="text-red-400">* </span>{t("company")}
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <Building className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                    <div className="mb-0">
+                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                            <span className="text-red-400">* </span>{t("company")}
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <Building className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="company"
+                                                rules={[{ required: true, message: t("companyError") }]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     placeholder={t("companyPlaceholder")}
                                                     className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -401,24 +415,24 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                            </div>
+                                            </Form.Item>
                                         </div>
-                                    </Form.Item>
+                                    </div>
 
                                     {/* Position Field */}
-                                    <Form.Item
-                                        name="position"
-                                        rules={[{ required: true, message: t("positionError") }]}
-                                        className="mb-0"
-                                    >
-                                        <div>
-                                            <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                                <span className="text-red-400">* </span>{t("position")}
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <Briefcase className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                    <div className="mb-0">
+                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                            <span className="text-red-400">* </span>{t("position")}
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <Briefcase className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="position"
+                                                rules={[{ required: true, message: t("positionError") }]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     placeholder={t("positionPlaceholder")}
                                                     className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -428,25 +442,25 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                            </div>
+                                            </Form.Item>
                                         </div>
-                                    </Form.Item>
+                                    </div>
                                 </div>
 
                                 {/* Contact Field */}
-                                <Form.Item
-                                    name="contact"
-                                    rules={[{ required: true, message: t("contactError") }]}
-                                    className="mb-0"
-                                >
-                                    <div>
-                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                            <span className="text-red-400">* </span>{t("contact")}
-                                        </label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                <Phone className="h-5 w-5 text-[#00d3f2]" />
-                                            </div>
+                                <div className="mb-0">
+                                    <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                        <span className="text-red-400">* </span>{t("contact")}
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                            <Phone className="h-5 w-5 text-[#00d3f2]" />
+                                        </div>
+                                        <Form.Item
+                                            name="contact"
+                                            rules={[{ required: true, message: t("contactError") }]}
+                                            className="mb-0"
+                                        >
                                             <Input
                                                 placeholder={t("contactPlaceholder")}
                                                 className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -456,25 +470,25 @@ const Register = () => {
                                                     height: '48px'
                                                 }}
                                             />
-                                        </div>
+                                        </Form.Item>
                                     </div>
-                                </Form.Item>
+                                </div>
 
                                 {/* Captcha Field */}
-                                <Form.Item
-                                    name="captcha"
-                                    rules={[{ required: true, message: t("captchaError") }]}
-                                    className="mb-0"
-                                >
-                                    <div>
-                                        <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
-                                            <span className="text-red-400">* </span>{t("captcha")}
-                                        </label>
-                                        <div className="flex gap-3">
-                                            <div className="relative flex-1">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                                    <Lock className="h-5 w-5 text-[#00d3f2]" />
-                                                </div>
+                                <div className="mb-0">
+                                    <label className="block text-[#d1d5dc] mb-2 text-sm font-medium">
+                                        <span className="text-red-400">* </span>{t("captcha")}
+                                    </label>
+                                    <div className="flex gap-3">
+                                        <div className="relative flex-1">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                                <Lock className="h-5 w-5 text-[#00d3f2]" />
+                                            </div>
+                                            <Form.Item
+                                                name="captcha"
+                                                rules={[{ required: true, message: t("captchaError") }]}
+                                                className="mb-0"
+                                            >
                                                 <Input
                                                     placeholder={t("captchaPlaceholder")}
                                                     className="w-full pl-12 pr-4 py-3 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,211,242,0.3)] rounded-lg text-white placeholder-[#6a7282] focus:outline-none focus:border-[#00d3f2] focus:ring-2 focus:ring-[rgba(0,211,242,0.3)] transition-all duration-300"
@@ -484,36 +498,35 @@ const Register = () => {
                                                         height: '48px'
                                                     }}
                                                 />
-                                            </div>
-                                            {captchaUrl && (
-                                                <div className="h-12 w-30 border border-[rgba(0,211,242,0.3)] rounded-lg overflow-hidden cursor-pointer hover:border-[#00d3f2] transition-all duration-300">
-                                                    <img
-                                                        src={captchaUrl}
-                                                        alt="captcha"
-                                                        onClick={fetchCaptcha}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                </div>
-                                            )}
+                                            </Form.Item>
                                         </div>
+                                        {captchaUrl && (
+                                            <div className="h-12 w-30 border border-[rgba(0,211,242,0.3)] rounded-lg overflow-hidden cursor-pointer hover:border-[#00d3f2] transition-all duration-300">
+                                                <img
+                                                    src={captchaUrl}
+                                                    alt="captcha"
+                                                    onClick={fetchCaptcha}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                </Form.Item>
+                                </div>
 
                                 {/* Newsletter Checkbox */}
-                                <Form.Item
-                                    name="emailSubscription"
-                                    valuePropName="checked"
-                                    initialValue={true}
-                                    className="mb-0"
-                                >
-                                    <div className="flex items-start gap-3">
+                                <div className="flex items-start gap-3">
+                                    <Form.Item
+                                        name="emailSubscription"
+                                        valuePropName="checked"
+                                        className="mb-0"
+                                    >
                                         <Checkbox className="mt-1">
                                             <span className="text-[#99a1af] text-sm">
                                                 {t("emailSubscriptionText") || "I would like to receive email updates about products, promotions, and news"}
                                             </span>
                                         </Checkbox>
-                                    </div>
-                                </Form.Item>
+                                    </Form.Item>
+                                </div>
 
                                 {/* Submit Button */}
                                 <Form.Item className="mb-0">
