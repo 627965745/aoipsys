@@ -12,6 +12,7 @@ import { DigisyntheticLogoSmall, DigisyntheticLogoLarge, SoundNetLogo } from "./
 const Register = () => {
     const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [captchaUrl, setCaptchaUrl] = useState("");

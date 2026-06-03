@@ -221,4 +221,10 @@ export const updateLanguage = (data) => {
   return instance.post("/Admin/Language/update", stringifyData(data));
 };
 
+export const userFieldTranslations = {
+    country_iso_code: i18next.t('country'),
+    geo_location: i18next.t('geoLocation'),
+    ip_login_last: i18next.t('lastLoginIp')
+};
+
 export default instance;

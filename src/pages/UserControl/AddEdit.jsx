@@ -106,13 +106,13 @@ const AddEditUser = ({
                 </Radio.Group>
             </div>
             <div>
-                <div className="mb-2">订阅状态</div>
+                <div className="mb-2">{t('isSubscribed')}</div>
                 <Radio.Group 
                     value={user?.is_subscribed}
                     onChange={(e) => handleChange('is_subscribed', e.target.value)}
                 >
-                    <Radio value={1}>已订阅</Radio>
-                    <Radio value={0}>不订阅</Radio>
+                    <Radio value={1}>{t('subscribed')}</Radio>
+                    <Radio value={0}>{t('notSubscribed')}</Radio>
                 </Radio.Group>
             </div>
         </Space>

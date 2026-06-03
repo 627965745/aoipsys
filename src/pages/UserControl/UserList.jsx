@@ -240,14 +240,14 @@ const UserList = () => {
                 title: t('accessLevel'),
                 dataIndex: 'level',
                 key: 'level',
-                width: '20%',
+                width: '15%',
                 align: 'center',
             },
             {
                 title: t('userGroup'),
                 dataIndex: 'group',
                 key: 'group',
-                width: '20%',
+                width: '15%',
                 align: 'center',
                 render: (group) => {
                     const groupOptions = [
@@ -263,7 +263,7 @@ const UserList = () => {
                 title: t('lastLogin'),
                 dataIndex: 'time_login_last',
                 key: 'time_login_last',
-                width: '20%',
+                width: '25%',
                 render: (time_login_last) => (
                     time_login_last ? time_login_last : <span className="text-gray-400">{t('neverLoggedIn')}</span>
                 )
@@ -272,13 +272,13 @@ const UserList = () => {
                 title: t('timeCreated'),
                 dataIndex: 'time_created',
                 key: 'time_created',
-                width: '20%',
+                width: '22%',
             },
             {
                 title: t('timeUpdated'),
                 dataIndex: 'time_updated',
                 key: 'time_updated',
-                width: '20%',
+                width: '23%',
             },
         ];
 
@@ -288,6 +288,7 @@ const UserList = () => {
                 dataSource={[record]} 
                 pagination={false} 
                 rowKey="id"
+                size="small"
             />
         );
     };
@@ -299,11 +300,11 @@ const UserList = () => {
             width: '15%',
             render: (name, record) => (
                 <div>
-                    <div>{name}</div>
+                    <div className="font-medium">{name}</div>
                     <Button 
                         type="link" 
                         size="small" 
-                        className="p-0"
+                        className="p-0 h-auto"
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowIds(prev => ({
@@ -313,9 +314,9 @@ const UserList = () => {
                         }}
                     >
                         {showIds[record.id] ? (
-                            <span className="text-xs text-gray-400">ID: {record.id}</span>
+                            <span className="text-[10px] text-gray-400">ID: {record.id}</span>
                         ) : (
-                            <span className="text-xs text-gray-400">{t('showId')}</span>
+                            <span className="text-[10px] text-gray-400">{t('showId')}</span>
                         )}
                     </Button>
                 </div>
@@ -324,12 +325,14 @@ const UserList = () => {
         {
             title: t('email'),
             dataIndex: 'email',
-            width: '15%',
+            width: '17%',
+            ellipsis: true,
         },
         {
             title: t('company'),
             dataIndex: 'company',
-            width: '15%',
+            width: '10%',
+            ellipsis: true,
             render: (company) => (
                 company ? company : <span className="text-gray-400">{t('notProvided')}</span>
             )
@@ -337,7 +340,8 @@ const UserList = () => {
         {
             title: t('position'),
             dataIndex: 'position',
-            width: '10%',
+            width: '8%',
+            ellipsis: true,
             render: (position) => (
                 position ? position : <span className="text-gray-400">{t('notProvided')}</span>
             )
@@ -345,7 +349,8 @@ const UserList = () => {
         {
             title: t('industry'),
             dataIndex: 'industry',
-            width: '10%',
+            width: '8%',
+            ellipsis: true,
             render: (industry) => (
                 industry ? industry : <span className="text-gray-400">{t('notProvided')}</span>
             )
@@ -353,10 +358,39 @@ const UserList = () => {
         {
             title: t('contact'),
             dataIndex: 'contact',
-            width: '13%',
+            width: '10%',
+            ellipsis: true,
             render: (contact) => (
                 contact ? contact : <span className="text-gray-400">{t('notProvided')}</span>
             )
+        },
+        {
+            title: t('loginDetails'),
+            width: '12%',
+            render: (_, record) => {
+                const getFlagEmoji = (countryCode) => {
+                    if (!countryCode) return '';
+                    return countryCode
+                        .toUpperCase()
+                        .replace(/./g, (char) => 
+                            String.fromCodePoint(char.charCodeAt(0) + 127397)
+                        );
+                };
+                
+                return (
+                    <div className="text-xs">
+                        <div className="font-mono">{record.ip_login_last || t('notAvailable')}</div>
+                        <div className="text-gray-500">
+                            {record.country_iso_code && (
+                                <span className="mr-1" title={record.country_iso_code}>
+                                    {getFlagEmoji(record.country_iso_code)}
+                                </span>
+                            )}
+                            {record.geo_location}
+                        </div>
+                    </div>
+                );
+            }
         },
         {
             title: t('status'),
@@ -370,7 +404,7 @@ const UserList = () => {
             ),
         },
         {
-            title: '订阅状态',
+            title: t('isSubscribed'),
             dataIndex: 'is_subscribed',
             width: '5%',
             align: 'center',
@@ -386,15 +420,17 @@ const UserList = () => {
             width: '10%',
             align: 'center',
             render: (_, record) => (
-                <Space>
+                <Space size="small">
                     <Button 
                         type="link" 
+                        size="small"
                         onClick={() => handleEdit(record)}
                     >
                         {t('edit')}
                     </Button>
                     <Button 
                         type="link"
+                        size="small"
                         onClick={() => {
                             setResettingUser(record);
                             setResetPasswordModalVisible(true);
