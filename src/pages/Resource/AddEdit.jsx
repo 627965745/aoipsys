@@ -12,7 +12,8 @@ const AddEditResource = ({
     products, 
     typeOptions,
     languages,
-    t
+    t,
+    onSearchProduct
 }) => {
     const [isManualUrlModalVisible, setIsManualUrlModalVisible] = useState(false);
     const [manualUrl, setManualUrl] = useState('');
@@ -256,9 +257,8 @@ const AddEditResource = ({
                         style={{ width: '100%' }}
                         status={errors.product ? "error" : ""}
                         showSearch
-                        filterOption={(input, option) =>
-                            option?.children?.toLowerCase().includes(input.toLowerCase())
-                        }
+                        filterOption={false}
+                        onSearch={onSearchProduct}
                     >
                         {products.map(product => (
                             <Select.Option key={product.id} value={product.id}>

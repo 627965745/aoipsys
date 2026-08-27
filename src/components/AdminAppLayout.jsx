@@ -158,6 +158,10 @@ const AdminAppLayout = () => {
                             key: "language",
                             label: t("languageManagement")
                         },
+                        {
+                            key: "cdkey",
+                            label: t("cdkeyManagement") || "激活码管理"
+                        },
                     ]}
                 />
             </div>

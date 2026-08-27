@@ -40,6 +40,12 @@ const getErrorMessage = (status, endpoint = '') => {
                 return i18next.t(`error.register.${status}`);
             }
             break;
+        case '/Commom/User/VCS':
+        case '/Common/User/VCS':
+            if (status === 101) {
+                return i18next.t('error.vcs.101');
+            }
+            break;
     }
     return i18next.t('unknownError', 'An unknown error occurred');
 };
@@ -55,6 +61,12 @@ const instance = axios.create({
 
 instance.interceptors.response.use(
     (response) => {
+        // 二进制/原始响应（如验证码图片流）没有 JSON status 包装，直接放行
+        const responseType = response.config?.responseType;
+        if (responseType && responseType !== "json") {
+            return response;
+        }
+
         if (response.data.status !== 0) {
             const url = new URL(response.config.url, response.config.baseURL);
             const endpoint = url.pathname;
@@ -91,8 +103,8 @@ instance.interceptors.response.use(
     }
 );
 
-export const getCaptcha = () => {
-    return instance.get(`/Common/Captcha/get?t=${new Date().getTime()}`);
+export const getCaptcha = (config = {}) => {
+    return instance.get(`/Common/Captcha/get?t=${new Date().getTime()}`, config);
 };
 
 export const validateEmail = (data) => {
@@ -144,7 +156,7 @@ export const createProduct = (data) => {
   return instance.post("/Admin/Product/create", stringifyData(data));
 };
 export const getProductDropdown = (data) => {
-  return instance.post("/Admin/Product/combo");
+  return instance.post("/Admin/Product/combo", stringifyData(data));
 };
 
 export const updateProduct = (data) => {
@@ -166,6 +178,9 @@ export const getUserList = (data) => {
 };
 export const createUser = (data) => {
   return instance.post("/Admin/Operator/create", stringifyData(data));
+};
+export const getUserDropdown = (data) => {
+  return instance.post("/Admin/Operator/combo", stringifyData(data));
 };
 export const updateUser = (data) => {
   return instance.post("/Admin/Operator/update", stringifyData(data));
@@ -192,6 +207,24 @@ export const resetPassword = (data) => {
     return instance.post("/Common/User/reset", stringifyData(data));
 };
 
+export const claimCDKey = (data) => {
+    return instance.post("/Client/CDKey/get", stringifyData(data));
+};
+export const claimCDKeyHistory = (data) => {
+    return instance.post("/Client/CDKey/check", stringifyData(data));
+};
+export const chatBot = (data, config) => {
+    return instance.post("/Client/Search/chatBot", stringifyData(data), config);
+};
+export const createCDKey = (data) => {
+    return instance.post("/Admin/CDKey/create", stringifyData(data));
+};
+export const readCDKey = (data) => {
+    return instance.post("/Admin/CDKey/read", stringifyData(data));
+};
+export const updateCDKey = (data) => {
+    return instance.post("/Admin/CDKey/update", stringifyData(data));
+};
 export const getResource = (data) => {
     return instance.post("/Client/Search/resource", stringifyData(data));
 };

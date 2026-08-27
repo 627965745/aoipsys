@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message } from "antd";
 import { useTranslation } from "react-i18next";
-import { login, getCaptcha } from "../api/api";
+import { login } from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useCaptcha } from "../hooks/useCaptcha";
 
 const LoginForm = () => {
     const { t } = useTranslation();
-    const [captchaUrl, setCaptchaUrl] = useState("");
+    const { captchaUrl, fetchCaptcha } = useCaptcha();
     const [captchaValue, setCaptchaValue] = useState("");
     const navigate = useNavigate();
     const [form] = Form.useForm();
@@ -16,19 +17,6 @@ const LoginForm = () => {
     useEffect(() => {
         fetchCaptcha();
     }, []);
-
-    const fetchCaptcha = async () => {
-        try {
-            const response = await getCaptcha();
-            if (response.data.status === 0) {
-                setCaptchaUrl(response.data.data.image);
-            } else {
-                message.error(t("captchaLoadError"));
-            }
-        } catch (error) {
-            message.error(t("captchaLoadError"));
-        }
-    };
 
     const onFinish = async (values) => {
         try {

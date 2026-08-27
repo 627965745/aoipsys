@@ -16,6 +16,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LangPage from "./pages/LanguageControl/LangPage";
 import EmailPage from "./pages/Email/EmailPage";
+import CDKeyPage from "./pages/CDKey/CDKeyPage";
 function App() {
     return (
         <Router>
@@ -39,6 +40,7 @@ function App() {
                         <Route path="user" element={<UserPage />} />
                         <Route path="email" element={<EmailPage />} />
                         <Route path="language" element={<LangPage />} />
+                        <Route path="cdkey" element={<CDKeyPage />} />
                         <Route path="login" element={<AdminLoginPage />} />
                     </Route>
 

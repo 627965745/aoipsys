@@ -2,12 +2,13 @@ import { Button, Form, Input, message, Modal, Checkbox } from "antd";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
-import { register, getCaptcha } from "../api/api";
+import { register } from "../api/api";
 import { User, Lock, Eye, EyeOff, Globe, ChevronDown, Building, Briefcase, Phone, Mail } from 'lucide-react';
 import loginImage from "../assets/loginImage.webp";
 import logoImage from "../assets/62dec083aa150333bea0f372c3e84e30062b9518.png";
 import ravennaLogo from "../assets/ba3babc66b385e025079f4da0dc333957d991d49.png";
 import { DigisyntheticLogoSmall, DigisyntheticLogoLarge, SoundNetLogo } from "./LogoSvg";
+import { useCaptcha } from "../hooks/useCaptcha";
 
 const Register = () => {
     const { t, i18n } = useTranslation();
@@ -15,7 +16,7 @@ const Register = () => {
     const navigate = useNavigate();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [captchaUrl, setCaptchaUrl] = useState("");
+    const { captchaUrl, fetchCaptcha } = useCaptcha();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -31,19 +32,6 @@ const Register = () => {
             form.setFieldsValue({ email });
         }
     }, [searchParams, form]);
-
-    const fetchCaptcha = async () => {
-        try {
-            const response = await getCaptcha();
-            if (response.data.status === 0) {
-                setCaptchaUrl(response.data.data.image);
-            } else {
-                message.error(t("captchaLoadError"));
-            }
-        } catch (error) {
-            message.error(t("captchaLoadError"));
-        }
-    };
 
     const onFinish = async (values) => {
         try {

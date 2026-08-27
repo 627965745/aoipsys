@@ -2,18 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message, Image, Select } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
-import { resetPassword, logout, getCaptcha } from "../api/api";
+import { resetPassword, logout } from "../api/api";
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useAuth } from "../contexts/AuthContext";
+import { useCaptcha } from "../hooks/useCaptcha";
 
 const ResetPassword = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const [form] = Form.useForm();
-    const [captchaUrl, setCaptchaUrl] = useState(
-        `${import.meta.env.VITE_API_BASE_URL}/Common/Captcha/get`
-    );
+    const { captchaUrl, fetchCaptcha: refreshCaptcha } = useCaptcha();
     const [loading, setLoading] = useState(false);
     const { checkAuthStatus } = useAuth();
 
@@ -23,19 +22,6 @@ const ResetPassword = () => {
     useEffect(() => {
         refreshCaptcha();
     }, []);
-
-    const refreshCaptcha = async () => {
-        try {
-            const response = await getCaptcha();
-            if (response.data.status === 0) {
-                setCaptchaUrl(response.data.data.image);
-            } else {
-                message.error(t("captchaLoadError"));
-            }
-        } catch (error) {
-            message.error(t("captchaLoadError"));
-        }
-    };
 
     const handleSubmit = async (values) => {
         if (values.newPassword !== values.confirmPassword) {
@@ -190,13 +176,15 @@ const ResetPassword = () => {
                     >
                         <div className="flex gap-4">
                             <Input placeholder={t("enterCaptcha")} />
-                            <Image
-                                src={captchaUrl}
-                                alt="captcha"
-                                preview={false}
-                                className="cursor-pointer"
-                                onClick={refreshCaptcha}
-                            />
+                            {captchaUrl && (
+                                <Image
+                                    src={captchaUrl}
+                                    alt="captcha"
+                                    preview={false}
+                                    className="cursor-pointer"
+                                    onClick={refreshCaptcha}
+                                />
+                            )}
                         </div>
                     </Form.Item>
 

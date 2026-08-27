@@ -109,6 +109,17 @@ const ResourceList = () => {
         }
     };
 
+    const handleProductSearch = async (value) => {
+        try {
+            const response = await getProductDropdown({ query: value });
+            if (response.data.status === 0) {
+                setProducts(response.data.data || []);
+            }
+        } catch (error) {
+            console.error("Error fetching product dropdown:", error);
+        }
+    };
+
     useEffect(() => {
         if (!combosFetched.current) {
             combosFetched.current = true;
@@ -116,7 +127,7 @@ const ResourceList = () => {
             const fetchInitialData = async () => {
                 try {
                     await fetchLanguages();
-                    const productsResponse = await getProductDropdown();
+                    const productsResponse = await getProductDropdown({ query: "" });
                     if (productsResponse.data.status === 0) {
                         const productData = productsResponse.data.data || [];
                         setProducts(productData);
@@ -655,9 +666,8 @@ const ResourceList = () => {
                     allowClear
                     style={{ width: 200 }}
                     showSearch
-                    filterOption={(input, option) =>
-                        option?.label?.toLowerCase().includes(input.toLowerCase())
-                    }
+                    filterOption={false}
+                    onSearch={handleProductSearch}
                     options={products.map((product) => ({
                         value: product.id,
                         label: product.name,
@@ -706,6 +716,7 @@ const ResourceList = () => {
                     typeOptions={typeOptions}
                     languages={languages}
                     t={t}
+                    onSearchProduct={handleProductSearch}
                 />
             </Modal>
 
@@ -730,6 +741,7 @@ const ResourceList = () => {
                     typeOptions={typeOptions}
                     languages={languages}
                     t={t}
+                    onSearchProduct={handleProductSearch}
                 />
             </Modal>
             <Modal
