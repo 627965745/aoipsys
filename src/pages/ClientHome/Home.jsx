@@ -9,6 +9,7 @@ import {
     getLanguageCombo,
     getUserInfo,
     subscribeEmail,
+    chatBot,
 } from "../../api/api"; // 假设路径一致
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext"; // 假设路径一致
@@ -30,10 +31,27 @@ import {
     Calendar,
     Zap,
     Loader2,
+    MessageSquare,
 } from "lucide-react";
-import { ExclamationCircleOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { ExclamationCircleOutlined, FilePdfOutlined, FileMarkdownOutlined } from "@ant-design/icons";
 import MdViewer from "../../components/MdViewer"; // 假设路径一致
+import ClaimVsc from "./ClaimVsc";
 import qs from "qs";
+
+const isMarkdown = (text) => {
+    if (!text) return false;
+    const mdPatterns = [
+        /(?:^|\n)#{1,6}\s+/,         // headers
+        /(?:^|\n)[-*+]\s+/,          // unordered lists
+        /(?:^|\n)\d+\.\s+/,          // ordered lists
+        /\*\*[^*]+\*\*/,             // bold
+        /\*[^*]+\*/,                 // italic
+        /`[^`]+`/,                   // inline code
+        /```/,                       // code block
+        /\[([^\]]+)\]\(([^)]+)\)/    // links
+    ];
+    return mdPatterns.some(pattern => pattern.test(text));
+};
 
 // 简单的 SVG Logo 组件，替代原来的图片
 const Logo = () => (
@@ -83,6 +101,146 @@ const Home = () => {
     const userMenuRef = useRef(null);
     const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
+    // --- Chatbot States ---
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatInput, setChatInput] = useState("");
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatSession, setChatSession] = useState("");
+    const [chatLoading, setChatLoading] = useState(false);
+    const [chatSlowRequest, setChatSlowRequest] = useState(false);
+    const [chatDimensions, setChatDimensions] = useState({ width: 480, height: 450 });
+    const [chatResized, setChatResized] = useState(false);
+    const chatRef = useRef(null);
+    const messagesEndRef = useRef(null);
+    const chatInputRef = useRef(null);
+    const isResizingRef = useRef(false);
+
+    const handleResizeMouseDown = (e) => {
+        e.preventDefault();
+        isResizingRef.current = true;
+        setChatResized(true);
+
+        const rect = chatRef.current?.querySelector(".floating-chat-window")?.getBoundingClientRect();
+        const bodyRect = chatRef.current?.querySelector(".chat-messages-body")?.getBoundingClientRect();
+        
+        const startWidth = rect ? rect.width : chatDimensions.width;
+        const startHeight = bodyRect ? bodyRect.height : chatDimensions.height;
+        const startX = e.clientX;
+        const startY = e.clientY;
+
+        const handleMouseMove = (moveEvent) => {
+            if (!isResizingRef.current) return;
+            const deltaX = moveEvent.clientX - startX;
+            const deltaY = moveEvent.clientY - startY;
+            const newWidth = Math.max(340, Math.min(800, startWidth + deltaX));
+            const newHeight = Math.max(250, Math.min(700, startHeight + deltaY));
+            setChatDimensions({
+                width: newWidth,
+                height: newHeight
+            });
+        };
+
+        const handleMouseUp = () => {
+            isResizingRef.current = false;
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    const handleSendChatMessage = async () => {
+        const text = chatInput.trim();
+        if (!text || chatLoading) return;
+
+        // Add user message
+        const newMessages = [...chatMessages, { sender: "user", text }];
+        setChatMessages(newMessages);
+        setChatInput("");
+        setChatLoading(true);
+        setChatSlowRequest(false);
+
+        // Auto-scroll to bottom after setting user message
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 50);
+
+        let slowTimer = setTimeout(() => {
+            setChatSlowRequest(true);
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 50);
+        }, 30000);
+
+        try {
+            // Call API with 60s timeout
+            const response = await chatBot(
+                {
+                    session: chatSession || "",
+                    message: text,
+                    language: i18n.language,
+                },
+                {
+                    timeout: 60000,
+                }
+            );
+
+            if (response.data.status === 0) {
+                const { session, message: botReply } = response.data.data || response.data || {};
+                
+                if (session) {
+                    setChatSession(session);
+                }
+
+                setChatMessages((prev) => [
+                    ...prev,
+                    { sender: "bot", text: botReply || "" },
+                ]);
+            } else {
+                setChatMessages((prev) => [
+                    ...prev,
+                    {
+                        sender: "bot",
+                        text: response.data.message || t("chatTimeout") || "Request timed out. Please try again later.",
+                        isError: true,
+                    },
+                ]);
+            }
+        } catch (error) {
+            console.error("ChatBot error:", error);
+            setChatMessages((prev) => [
+                ...prev,
+                {
+                    sender: "bot",
+                    text: t("chatTimeout") || "Request timed out. Please try again later.",
+                    isError: true,
+                },
+            ]);
+        } finally {
+            clearTimeout(slowTimer);
+            setChatLoading(false);
+            setChatSlowRequest(false);
+            // Auto-scroll to bottom after loader goes away
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 50);
+        }
+    };
+
+    const handleClearChat = () => {
+        setChatMessages([]);
+        setChatSession("");
+    };
+
+    useEffect(() => {
+        if (chatOpen) {
+            setTimeout(() => {
+                chatInputRef.current?.focus();
+            }, 100);
+        }
+    }, [chatOpen]);
+
     // --- API Effects ---
     useEffect(() => {
         fetchConditions();
@@ -112,6 +270,9 @@ const Home = () => {
             }
             if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
                 setShowLanguageDropdown(false);
+            }
+            if (chatRef.current && !chatRef.current.contains(event.target)) {
+                setChatOpen(false);
             }
         };
 
@@ -432,6 +593,29 @@ const Home = () => {
         }
     };
 
+    const handleDownloadMarkdown = () => {
+        if (!currentMarkdown || !currentResource?.resource_name) return;
+
+        try {
+            const blob = new Blob([currentMarkdown], { type: "text/markdown;charset=utf-8" });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            const dateString = formatDateForFilename(currentResource.time_updated);
+            link.download = `${currentResource.resource_name}${dateString}.md`;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            message.success(t("mdDownloadSuccess"));
+        } catch (error) {
+            console.error("Markdown download error:", error);
+            message.error(t("mdDownloadError"));
+        }
+    };
+
     const formatDateForFilename = (dateString) => {
         if (!dateString) return '';
         try {
@@ -475,7 +659,7 @@ const Home = () => {
     };
 
     return (
-        <div className="min-h-screen flex bg-[#f5f7fa] font-sans relative">
+        <div className="h-screen flex bg-[#f5f7fa] font-sans relative overflow-hidden">
             {/* --- Mobile Overlay --- */}
             {sidebarOpen && (
                 <div
@@ -488,7 +672,7 @@ const Home = () => {
             <aside
                 className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-64 bg-white border-r border-[#e5e7eb] flex flex-col shadow-lg lg:shadow-sm
+        w-72 bg-white border-r border-[#e5e7eb] flex flex-col shadow-lg lg:shadow-sm
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
@@ -502,59 +686,250 @@ const Home = () => {
                 </button>
 
                 {/* Logo */}
-                <div className="p-6 border-b border-[#e5e7eb]">
+                <div className="px-6 py-3 border-b border-[#e5e7eb] flex items-center h-[75px]">
                     <Logo />
                 </div>
 
                 {/* Navigation Menu */}
-                <nav className="flex-1 p-4 space-y-1">
-                    {/* <button
-                        onClick={() => setActiveMenu("home")}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 ${
-                            activeMenu === "home"
-                                ? "bg-[#e0f2fe] text-[#0369a1] border border-[#bae6fd]"
-                                : "text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1f2937]"
-                        }`}
-                    >
-                        <HomeIcon className="h-5 w-5" />
-                        <span>{t.home || "Home"}</span>
-                    </button> */}
+                <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
 
-                    <button
-                        onClick={() => setActiveMenu("resources-docs")}
-                        className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 ${
-                            activeMenu === "resources-docs"
-                                ? "bg-[#e0f2fe] text-[#0369a1] border border-[#bae6fd]"
-                                : "text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1f2937]"
-                        }`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5" />
-                            <span>{t("resourcesDocs")}</span>
+                    {/* Category List */}
+                    <div className="space-y-1">
+                        <label className="text-[#374151] font-semibold mb-2 block text-xs uppercase tracking-wider px-4">
+                            {t("category") || "分类"}
+                        </label>
+                        <div className="space-y-2">
+                            {categories.map((category) => (
+                                <button
+                                    key={category.id}
+                                    onClick={() => {
+                                        setActiveMenu("resources-docs");
+                                        handleCategoryClick(category);
+                                        setSidebarOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                                        activeMenu === "resources-docs" && selectedCategory?.id === category.id
+                                            ? "bg-[#645D21] text-white font-medium shadow-sm"
+                                            : category.highlighted === 1
+                                            ? "bg-[#B8BE14]/15 text-[#645D21] hover:bg-[#B8BE14]/25 font-medium"
+                                            : "text-[#4b5563] hover:bg-gray-100 hover:text-gray-900"
+                                    }`}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
                         </div>
-                        {/* <span className="text-xs bg-[#0369a1] text-white px-2 py-0.5 rounded font-bold">
-                            NEW
-                        </span> */}
-                    </button>
+                    </div>
                 </nav>
 
+                {/* Bottom Activation Code Button */}
+                <div className="p-4 border-t border-[#e5e7eb]">
+                    <button
+                        onClick={() => {
+                            setActiveMenu("claim-vsc");
+                            setSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-semibold border ${
+                            activeMenu === "claim-vsc"
+                                ? "bg-indigo-600 text-white border-indigo-600 shadow-md hover:bg-indigo-700"
+                                : "bg-indigo-50/60 text-indigo-600 border-indigo-100 hover:bg-indigo-100/80 hover:text-indigo-700"
+                        }`}
+                    >
+                        <Zap className="h-4.5 w-4.5" />
+                        <span>{t("claimTrialVsc") || "申请 VSC 激活码"}</span>
+                    </button>
+                </div>
             </aside>
 
             {/* --- Main Content --- */}
             <main className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
                 <header className="sticky top-0 z-40 border-b border-[#e5e7eb] bg-white shadow-sm">
-                    <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
-                        <div className="flex items-center gap-3">
+                    <div className="flex w-full items-center justify-between gap-3 px-4 py-3 relative">
+                        <div className="flex-1 flex items-center justify-start gap-3">
                             <button
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
                                 className="lg:hidden rounded-lg border border-[#d1d5db] bg-white p-2 text-[#1f2937] shadow-sm transition hover:border-[#0369a1]"
                             >
                                 <Menu className="h-5 w-5" />
                             </button>
-                            <Logo />
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        {/* Centered Chatbot Wrapper - Responsive Flexbox */}
+                        <div ref={chatRef} className="flex-initial z-50 w-auto sm:w-full max-w-[40px] sm:max-w-[220px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[360px] mx-2">
+                            {/* Style block for shimmer & breathing glow */}
+                            <style>{`
+                                @keyframes shimmer-sweep {
+                                    0% { transform: translateX(-150%) skewX(-15deg); }
+                                    90%, 100% { transform: translateX(300%) skewX(-15deg); }
+                                }
+                                @keyframes glow-breath {
+                                    0%, 100% { 
+                                        box-shadow: 0 0 12px rgba(184, 190, 20, 0.25), 0 0 0 1px rgba(184, 190, 20, 0.1);
+                                        border-color: rgba(184, 190, 20, 0.8);
+                                    }
+                                    50% { 
+                                        box-shadow: 0 0 22px rgba(184, 190, 20, 0.55), 0 0 0 3px rgba(184, 190, 20, 0.25);
+                                        border-color: rgba(184, 190, 20, 1);
+                                    }
+                                }
+                            `}</style>
+
+                            <div className="lg:relative">
+                                {/* Trigger Bar */}
+                                <div
+                                    onClick={() => setChatOpen((prev) => !prev)}
+                                    className="flex items-center justify-center sm:justify-start gap-2.5 rounded-full border-2 border-transparent w-10 h-10 sm:w-full sm:h-auto px-0 sm:px-4 py-0 sm:py-[7px] cursor-pointer select-none transition-all duration-300 bg-white hover:bg-gray-50/50 hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden animate-[glow-breath_4s_infinite]"
+                                >
+                                    {/* Shimmer sweep effect */}
+                                    <div className="absolute inset-0 w-1/3 h-full bg-gradient-to-r from-transparent via-[#B8BE14]/20 to-transparent -skew-x-12 -translate-x-full animate-[shimmer-sweep_3.5s_infinite] pointer-events-none"></div>
+
+                                    <MessageSquare className="h-4.5 w-4.5 text-[#B8BE14] shrink-0" />
+                                    <span className="hidden sm:block text-sm text-gray-500 font-medium truncate w-full select-none text-left">
+                                        {t("chatPlaceholder") || "Chat with our advanced AI Agent..."}
+                                    </span>
+                                </div>
+
+                                {/* Floating Chat Window */}
+                                <div
+                                    style={chatResized ? { width: `${chatDimensions.width}px` } : undefined}
+                                    className={`floating-chat-window absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100vw-2rem)] md:w-[480px] max-w-[400px] md:max-w-[calc(100vw-2rem)] bg-white border border-[#e5e7eb] rounded-2xl shadow-xl overflow-hidden z-50 transition-[opacity,transform] duration-300 origin-top ${
+                                        chatOpen
+                                            ? "opacity-100 scale-y-100 translate-y-0"
+                                            : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"
+                                    }`}
+                                >
+                                    {/* Chat Header */}
+                                    <div className="bg-gradient-to-r from-[#B8BE14] to-[#a3aa12] px-4 py-3 text-white flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+                                                AI
+                                            </div>
+                                            <div className="text-left">
+                                                <h4 className="text-sm font-semibold leading-tight">{t("chatTitle") || "AI Assistant"}</h4>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {chatMessages.length > 0 && (
+                                                <button
+                                                    onClick={handleClearChat}
+                                                    className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white transition font-medium"
+                                                    title={t("chatClear") || "Clear Chat"}
+                                                >
+                                                    {t("chatClear") || "Clear Chat"}
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => setChatOpen(false)}
+                                                className="p-1 rounded hover:bg-white/10 text-white transition"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Messages Body */}
+                                    <div
+                                        style={chatResized ? { height: `${chatDimensions.height}px` } : undefined}
+                                        className="chat-messages-body overflow-y-auto p-4 bg-gray-50/50 space-y-3 flex flex-col scrollbar-thin h-[300px] sm:h-[400px] md:h-[450px]"
+                                    >
+                                        {chatMessages.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center h-full text-center p-6 text-gray-400">
+                                                <div className="w-12 h-12 rounded-2xl bg-[#B8BE14]/15 flex items-center justify-center mb-3 text-[#B8BE14]">
+                                                    <MessageSquare className="w-6 h-6" />
+                                                </div>
+                                                <p className="text-sm font-medium text-gray-600 mb-1">
+                                                    {t("chatTitle") || "AI Assistant"}
+                                                </p>
+                                                <p className="text-xs max-w-[200px]">
+                                                    {t("chatWelcomeDesc") || "Is there anything you would like to ask about our products?"}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            chatMessages.map((msg, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                                                >
+                                                    <div
+                                                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm text-left ${
+                                                            msg.sender === "user"
+                                                                ? "bg-[#B8BE14] text-white rounded-tr-none"
+                                                                : msg.isError
+                                                                ? "bg-red-50 text-red-700 border border-red-100 rounded-tl-none"
+                                                                : "bg-white text-gray-800 border border-gray-100 rounded-tl-none"
+                                                        }`}
+                                                    >
+                                                        {msg.sender === "bot" && !msg.isError && isMarkdown(msg.text) ? (
+                                                            <MdViewer content={msg.text} />
+                                                        ) : (
+                                                            <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+
+                                        {/* Loading spinner for pending response */}
+                                        {chatLoading && (
+                                            <div className="flex flex-col gap-2 justify-start items-start">
+                                                <div className="max-w-[85%] bg-white text-gray-500 border border-gray-100 rounded-2xl rounded-tl-none px-4 py-2.5 text-sm shadow-sm flex items-center gap-2">
+                                                    <Loader2 className="w-4 h-4 text-[#B8BE14] animate-spin" />
+                                                    <span>{t("chatProcessing") || "Processing your message..."}</span>
+                                                </div>
+                                                {chatSlowRequest && (
+                                                    <div className="max-w-[85%] bg-amber-50 text-amber-700 border border-amber-100 rounded-2xl rounded-tl-none px-4 py-2 text-xs shadow-sm text-left animate-fade-in">
+                                                        <span>{t("chatSlowRequest") || "Still processing your message, please wait a moment..."}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+
+                                    {/* Bottom Input Area inside Dropdown */}
+                                    <div className="p-3 bg-white border-t border-[#e5e7eb] flex items-center gap-2 relative">
+                                        <input
+                                            ref={chatInputRef}
+                                            type="text"
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                                                    handleSendChatMessage();
+                                                }
+                                            }}
+                                            placeholder={t("chatPlaceholder") || "tell me what you are looking for"}
+                                            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#B8BE14] focus:bg-white transition-all p-2"
+                                        />
+                                        <button
+                                            onClick={handleSendChatMessage}
+                                            disabled={!chatInput.trim() || chatLoading}
+                                            className="bg-[#B8BE14] hover:bg-[#a3aa12] disabled:opacity-50 disabled:hover:bg-[#B8BE14] text-white rounded-xl px-3.5 py-1.5 text-sm font-medium transition flex items-center gap-1 shrink-0"
+                                        >
+                                            <span>{t("chatSend") || "Send"}</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Resize Handle */}
+                                    <div
+                                        onMouseDown={handleResizeMouseDown}
+                                        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 z-50 select-none group"
+                                    >
+                                        <svg
+                                            className="w-2.5 h-2.5 text-gray-400 group-hover:text-[#B8BE14] transition"
+                                            viewBox="0 0 6 6"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <line x1="5" y1="1" x2="1" y2="5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                                            <line x1="5" y1="3" x2="3" y2="5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex items-center justify-end gap-3 shrink-0">
                             <div ref={languageMenuRef} className="relative">
                                 <button
                                     onClick={() =>
@@ -683,7 +1058,8 @@ const Home = () => {
                     </div>
                 </header>
                 {/* --- Top Header Section --- */}
-                <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-white">
+                {activeMenu === "resources-docs" && (
+                    <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-white">
                     <div className="flex flex-col gap-6">
                         <div className="flex-1">
                             <h1 className="text-[#1f2937] text-xl font-semibold mb-1 flex items-center gap-2">
@@ -706,31 +1082,6 @@ const Home = () => {
                                 )}
                             </h1>
 
-                            {/* Category Tabs */}
-                            <div className="mt-6">
-                                <label className="text-[#374151] font-medium mb-3 block text-sm uppercase tracking-wide">
-                                    {t("category")}:
-                                </label>
-                                <div className="flex gap-2 flex-wrap">
-                                    {categories.map((category, index) => (
-                                        <button
-                                            key={category.id}
-                                            onClick={() =>
-                                                handleCategoryClick(category)
-                                            }
-                                            className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 border ${
-                                                selectedCategory?.id === category.id
-                                                    ? "bg-[#645D21] text-white border-[#645D21] shadow-md"
-                                                    : category.highlighted === 1
-                                                    ? "bg-[#B8BE14] text-white border-[#B8BE14] hover:bg-[#a3aa12]"
-                                                    : "bg-white text-[#6b7280] border-[#d1d5db] hover:border-[#B8BE14] hover:bg-[#B8BE14] hover:text-white"
-                                            }`}
-                                        >
-                                            {category.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
                             {/* Product Selection Section */}
                             <div className="mt-6">
@@ -797,9 +1148,11 @@ const Home = () => {
 
                     </div>
                 </div>
+                )}
 
                 {/* --- Table Section --- */}
-                <div className="flex-1 overflow-auto p-4 sm:p-6 bg-[#f9fafb]">
+                {activeMenu === "resources-docs" && (
+                    <div className="flex-1 overflow-auto p-4 sm:p-6 bg-[#f9fafb]">
                     <div className="bg-white border border-[#e5e7eb] rounded-lg overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[700px]">
@@ -997,6 +1350,13 @@ const Home = () => {
                         </div>
                     )}
                 </div>
+                )}
+
+                {activeMenu === "claim-vsc" && (
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#f9fafb]">
+                        <ClaimVsc />
+                    </div>
+                )}
 
                 {/* Footer */}
                 <div className="border-t border-[#e5e7eb] p-4 text-center bg-white">
@@ -1056,7 +1416,14 @@ const Home = () => {
                 {currentResource?.is_markdown === 1 && (
                     <div>
                         {currentResource.type !== 1 && (
-                            <div className="flex justify-end mb-4">
+                            <div className="flex justify-end gap-3 mb-4">
+                                <Button
+                                    type="default"
+                                    icon={<FileMarkdownOutlined />}
+                                    onClick={handleDownloadMarkdown}
+                                >
+                                    {t("downloadMarkdown")}
+                                </Button>
                                 <Button
                                     type="default"
                                     icon={<FilePdfOutlined />}
