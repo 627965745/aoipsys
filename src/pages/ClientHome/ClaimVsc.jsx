@@ -19,11 +19,7 @@ const contentTranslations = {
         term5: "5. Limitation of Liability: In no event shall Digisynthetic be liable for any direct, indirect, incidental, or consequential damages arising out of the use or inability to use the Software.",
         term6: "6. License Termination: This trial license will terminate automatically at the end of the evaluation period, or immediately if you fail to comply with any terms.",
         agreeTerms: "I agree to the terms and conditions",
-<<<<<<< HEAD
         guideTitle: "VSC Installation & User Guide (Windows)",
-=======
-        guideTitle: "VSC Installation & User Guide (Linux)",
->>>>>>> 781e869fe323d692cf31b036eb611e52018cee2e
         claimTitle: "Claim Your Trial",
         claimBtn: "Claim Trial VSC",
         infoText: "The activation code will be shown on screen upon successful claim.",
@@ -55,11 +51,7 @@ const contentTranslations = {
         term5: "5. 责任限制：在任何情况下，对于因使用本软件而导致的任何损害，顶力公司均不承担责任。",
         term6: "6. 许可终止：本许可将在评估期结束时自动终止，或者在您违反协议任何条款时立即终止。",
         agreeTerms: "我同意条款和条件",
-<<<<<<< HEAD
         guideTitle: "VSC 安装与用户指南 (Windows)",
-=======
-        guideTitle: "VSC 安装与用户指南 (Linux)",
->>>>>>> 781e869fe323d692cf31b036eb611e52018cee2e
         claimTitle: "领取试用",
         claimBtn: "领取试用 VSC 激活码",
         infoText: "成功领取后，激活码将显示在下方。",
@@ -91,11 +83,7 @@ const contentTranslations = {
         term5: "5. Limitación de Responsabilidad: En ningún caso Digisynthetic será responsable de ningún daño que surja del uso o la imposibilidad de usar el Software.",
         term6: "6. Terminación de la Licencia: Esta licencia de prueba terminará automáticamente al final del período de evaluación, o inmediatamente si no cumple con alguno de los términos.",
         agreeTerms: "Acepto los términos y condiciones",
-<<<<<<< HEAD
         guideTitle: "Guía de Instalación y de Usuario de VSC (Windows)",
-=======
-        guideTitle: "Guía de Instalación y de Usuario de VSC (Linux)",
->>>>>>> 781e869fe323d692cf31b036eb611e52018cee2e
         claimTitle: "Solicitar su Prueba",
         claimBtn: "Solicitar Código VSC",
         infoText: "El código de activación se mostrará en pantalla una vez solicitado con éxito.",
