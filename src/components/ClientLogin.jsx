@@ -21,25 +21,14 @@ const ClientLogin = () => {
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
     const [languages, setLanguages] = useState([]);
-    const [loginImageLoaded, setLoginImageLoaded] = useState(false);
     const navigate = useNavigate();
     const { checkAuthStatus } = useAuth();
 
     useEffect(() => {
+        // 验证码与左侧背景图并行加载，弱网下不必等图片下载完才出现
         fetchLanguages();
-        // 在小屏幕下（没有左侧图片）直接加载验证码
-        const isSmallScreen = window.innerWidth < 1024;
-        if (isSmallScreen) {
-            fetchCaptcha();
-        }
+        fetchCaptcha();
     }, []);
-
-    // 等待左侧图片加载完成后再加载验证码
-    useEffect(() => {
-        if (loginImageLoaded) {
-            fetchCaptcha();
-        }
-    }, [loginImageLoaded]);
 
     const fetchLanguages = async () => {
         try {
@@ -153,11 +142,13 @@ const ClientLogin = () => {
                 <div className="hidden lg:flex lg:w-[42%] relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-[rgba(0,211,242,0.1)] to-transparent"></div>
                     <div className="absolute top-20 left-20 w-64 h-64 bg-[rgba(0,184,219,0.2)] rounded-full blur-3xl"></div>
+                    {/* 装饰性背景图降级为低优先级，弱网下把带宽让给验证码等接口请求 */}
                     <img
                         src={loginImage}
                         alt="Digisynthetic Documentation"
                         className="absolute inset-0 w-full h-full object-cover"
-                        onLoad={() => setLoginImageLoaded(true)}
+                        // eslint-disable-next-line react/no-unknown-property -- React 18 不认识 camelCase 的 fetchPriority，会在每次渲染告警；小写才不告警
+                        fetchpriority="low"
                     />
                 </div>
 
